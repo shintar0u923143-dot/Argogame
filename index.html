@@ -13,7 +13,7 @@ addEventListener('resize',rs);rs();
 let st='title',sex='m',hi=0,P,B=[],E=[],X=[],U=[],F=[],score=0,tm=0,sp=1,ov=0,pause=false,tx=W/2,ty=H-150,tch=false,keys={};
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: paste your Apps Script web app URL (ends in /exec) between the quotes ===== */
-const API_URL='https://script.google.com/macros/s/AKfycbw43K_FQ-xWpUlsWu60Xe5EWz-ruKY7ZgMt2yWllr1UTb52JxifGSEWmE97x7eB3-FZ-Q/exec';
+const API_URL='';
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
 if(!did){did=Math.random().toString(36).slice(2,12);try{localStorage.setItem('ap_did',did)}catch(e){}}
@@ -36,8 +36,9 @@ const TOOLS={heat:['HEAT GUN','🔥'],nail:['NAIL GUN','📌'],disc:['GRINDER','
 function init(){P={x:W/2,y:H-130,wp:'drill',lv:1,pp:[],inv:1.5,li:3,cd:0,top:0,bw:10};B=[];E=[];X=[];U=[];F=[];score=0;tm=0;sp=1;tx=W/2;ty=H-150;pause=false;st='play'}
 function pt(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left-ox)/sc,(e.clientY-r.top-oy)/sc]}
 cv.addEventListener('pointerdown',e=>{const[x,y]=pt(e);tch=true;
+ if(howInst){howInst=false;return}
  if(pause){pause=false;return}
- if(st=='title'){if(y>270&&y<370)sex=x<W/2?'m':'f';else if(y>=420&&y<=470&&x>90&&x<270)go();else if(y>=482&&y<=520&&x>90&&x<270)showLb()}
+ if(st=='title'){if(y>270&&y<370)sex=x<W/2?'m':'f';else if(y>=420&&y<=470&&x>90&&x<270)go();else if(y>=482&&y<=520&&x>90&&x<270)showLb();else if(y>=528&&y<=562&&x>90&&x<270&&!inst())install()}
  else if(st=='lb'){st='title'}
  else if(st=='over'){if(ov>1)showLb()}
  else{tx=x;ty=y-60}});
@@ -123,8 +124,9 @@ function title(){g.font='bold 56px Impact,"Arial Black",sans-serif';const a=g.me
  if(nmT>0)tt(nmMsg,W/2,414,12,'#ff8a80','center',3);
  g.fillStyle=R;g.fillRect(90,420,180,50);tt('PLAY',W/2,446,28,'#fff','center',4);
  g.fillStyle='#222';g.strokeStyle=Y;g.lineWidth=2;g.fillRect(90,482,180,38);g.strokeRect(90,482,180,38);tt('🏆 LEADERBOARD',W/2,502,17,Y,'center',3);
- tt('Drag to fly · auto-fire',W/2,544,13,'#ddd');tt('Tools = new weapons · PPE = shields',W/2,564,12,'#ddd');
- tt('Hardwood can’t be broken. Dodge it!',W/2,584,12,Y);tt('YOUR BEST '+hi,W/2,612,15,'#fff','center',3)}
+ if(!inst()){g.fillStyle='#222';g.strokeStyle='#fff';g.lineWidth=2;g.fillRect(90,528,180,34);g.strokeRect(90,528,180,34);tt('📲 INSTALL AS APP',W/2,545,15,'#fff','center',3)}
+ tt('Drag to fly · auto-fire · tools = weapons · PPE = shields',W/2,584,11,'#ddd');
+ tt('Hardwood can’t be broken. Dodge it!',W/2,600,12,Y);tt('YOUR BEST '+hi,W/2,622,15,'#fff','center',3)}
 function em(t,x,y,z){g.font=z+'px serif';g.textAlign='center';g.textBaseline='middle';g.fillStyle='#000';g.fillText(t,x,y)}
 function lbDraw(){tt('TOP 10',W/2,40,38,Y,'center',6);tt('ARGOPOWER CHALLENGE',W/2,74,14,'#fff','center',3);
  const r=lbRows.slice(0,10),me=n=>n==pname;
@@ -137,7 +139,7 @@ function lbDraw(){tt('TOP 10',W/2,40,38,Y,'center',6);tt('ARGOPOWER CHALLENGE',W
   tt(String(i+4),40,y+17,18,Y,'left',3);tt(x.n,76,y+17,16,'#fff','left',3);tt(String(x.s),W-40,y+17,18,'#fff','right',3)});
  if(!r.length)tt('No scores yet. Be the first!',W/2,300,18,'#fff','center',3);
  tt(lbMsg,W/2,572,12,'#ddd');tt('TAP ANYWHERE TO GO BACK',W/2,610,15,Y,'center',3)}
-function draw(){bg();if(st=='title'){title();return}if(st=='lb'){lbDraw();return}
+function draw(){bg();if(st=='title'){title();if(howInst)instDraw();return}if(st=='lb'){lbDraw();return}
  for(const e of E)de(e);for(const u of U)du(u);
  if(P.wp=='heat'&&st=='play'){const h=P.y-18-P.top;g.fillStyle='rgba(255,40,30,.55)';g.fillRect(P.x-P.bw/2,P.top,P.bw,h);g.fillStyle='#ffd0c0';g.fillRect(P.x-1.5,P.top,3,h)}
  for(const b of B){if(b.k=='b'){if(ok('bolt'))spr('bolt',b.x,b.y,22);else{g.fillStyle=Y;g.beginPath();g.arc(b.x,b.y,4,0,7);g.fill()}}
@@ -158,7 +160,17 @@ function loop(n){const dt=Math.min(.05,(n-last)/1000||0);last=n;
  g.setTransform(dpr,0,0,dpr,0,0);g.fillStyle='#000';g.fillRect(0,0,innerWidth,innerHeight);
  g.setTransform(dpr*sc,0,0,dpr*sc,dpr*ox,dpr*oy);g.save();g.beginPath();g.rect(0,0,W,H);g.clip();
  if(st=='play'){if(!pause)upd(dt)}else{tm+=dt;if(st=='over')ov+=dt}
- nmEl.style.display=st=='title'?'block':'none';if(nmT>0)nmT-=dt;draw();g.restore();requestAnimationFrame(loop)}
+ nmEl.style.display=st=='title'&&!howInst?'block':'none';if(nmT>0)nmT-=dt;draw();g.restore();requestAnimationFrame(loop)}
 P={x:W/2,y:H-130,wp:'drill',lv:1,pp:[],inv:0,li:3,cd:0,top:0,bw:10};
 requestAnimationFrame(loop);
+let dip=null,howInst=false;
+const inst=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const ua=navigator.userAgent,ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform=='MacIntel'&&navigator.maxTouchPoints>1),inapp=/FBAN|FBAV|FB_IAB|Instagram|Messenger|Viber|Line\//i.test(ua);
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e});
+addEventListener('appinstalled',()=>{dip=null});
+function install(){if(dip&&!inapp){dip.prompt();dip.userChoice.finally(()=>{dip=null})}else howInst=true}
+function instDraw(){g.fillStyle='rgba(0,0,0,.85)';g.fillRect(0,0,W,H);tt('INSTALL AS APP',W/2,110,32,Y,'center',5);
+ const L=inapp?['Open this link in Chrome or','Safari first (⋯ menu →','Open in browser), then','tap INSTALL AS APP again']:ios?['1. Open this page in Safari','2. Tap the Share button ⬆️','3. Tap “Add to Home Screen”','4. Tap Add']:['1. Tap the ⋮ menu in Chrome','2. Tap “Install app” or','“Add to Home screen”','3. Tap Install'];
+ L.forEach((t,i)=>tt(t,W/2,200+i*46,17,'#fff','center',3));tt('TAP TO CLOSE',W/2,520,15,Y,'center',3)}
+if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
