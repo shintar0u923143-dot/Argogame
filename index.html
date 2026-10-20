@@ -13,7 +13,7 @@ addEventListener('resize',rs);rs();
 let st='title',sex='m',hi=0,P,B=[],E=[],X=[],U=[],F=[],score=0,tm=0,sp=1,ov=0,pause=false,tx=W/2,ty=H-150,tch=false,keys={};
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: paste your Apps Script web app URL (ends in /exec) between the quotes ===== */
-const API_URL='';
+const API_URL='https://script.google.com/macros/s/AKfycbw43K_FQ-xWpUlsWu60Xe5EWz-ruKY7ZgMt2yWllr1UTb52JxifGSEWmE97x7eB3-FZ-Q/exec';
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
 if(!did){did=Math.random().toString(36).slice(2,12);try{localStorage.setItem('ap_did',did)}catch(e){}}
