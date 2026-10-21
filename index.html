@@ -279,7 +279,7 @@ function speedLines(){const k=Math.min(1,(BV-60)/560);if(k<=.02)return;g.save();
 function vignette(){const k=Math.min(1,(BV-60)/560);if(k<=.02)return;const v=g.createRadialGradient(W/2,H/2,H*.28,W/2,H/2,H*.72);
  v.addColorStop(0,'rgba(255,90,0,0)');v.addColorStop(1,`rgba(255,70,0,${.5*k*(.8+.2*Math.sin(tm*14))})`);g.fillStyle=v;g.fillRect(0,0,W,H)}
 function aura(x,y){g.save();g.globalCompositeOperation='lighter';const fr=((tm*16)|0)%4;
- if(ok('aura1')){glow('red',x,y,70,.4);g.globalAlpha=1;spr('aura'+(fr+1),x,y-8,160,0,130)}
+ if(ok('aura1')){glow('red',x,y,70,.4);g.globalAlpha=1;spr('aura'+(fr+1),x,y+26,256,0,200)}
  else{glow('red',x,y+10,70+Math.sin(tm*20)*6,.55);glow('fire',x,y+30,40,.5);
   for(let i=0;i<9;i++){const a=-Math.PI/2+(i-4)*.33,fl=26+Math.sin(tm*23+i*1.7)*10+Math.random()*6,bx=x+Math.cos(a)*18,by=y+Math.sin(a)*28,tx=x+Math.cos(a)*(30+fl),ty=y+Math.sin(a)*(40+fl)-8,px=Math.cos(a+1.57),py=Math.sin(a+1.57);
    const gr=g.createLinearGradient(bx,by,tx,ty);gr.addColorStop(0,'rgba(255,200,90,.7)');gr.addColorStop(.5,'rgba(255,110,20,.65)');gr.addColorStop(1,'rgba(225,37,27,0)');g.fillStyle=gr;g.globalAlpha=.8;
