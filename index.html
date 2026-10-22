@@ -15,6 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
+const VER='v18';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -418,7 +419,7 @@ function title(){g.fillStyle='rgba(0,0,0,.4)';g.fillRect(0,0,W,H);if(ok('logo'))
  btn(90,480,180,36,'🏆  LEADERBOARD','gold',17);
  btn(90,524,180,36,'❓  HOW TO PLAY','dark',16);if(!helpSeen){g.save();g.globalCompositeOperation='lighter';glow('helm',262,526,16,.6+.3*Math.sin(tm*6));g.restore();g.globalAlpha=1;tt('NEW',262,526,10,'#fff','center',2)}
  if(!inst())btn(90,568,180,32,'📲  INSTALL AS APP','dark',14);
- tt('YOUR BEST '+hi,W/2,622,15,'#fff','center',3)}
+ tt('YOUR BEST '+hi,W/2,622,15,'#fff','center',3);tt(VER,W-8,632,9,'rgba(255,255,255,.45)','right',0)}
 /* ===== HOW TO PLAY ===== */
 let hp=0,helpSeen=false;try{helpSeen=!!localStorage.getItem('ap_help')}catch(e){}
 function openHelp(){st='help';hp=0;helpSeen=true;try{localStorage.setItem('ap_help','1')}catch(e){}}
@@ -595,5 +596,7 @@ function install(){if(dip&&!inapp){dip.prompt();dip.userChoice.finally(()=>{dip=
 function instDraw(){g.fillStyle='rgba(0,0,0,.85)';g.fillRect(0,0,W,H);tt('INSTALL AS APP',W/2,110,32,Y,'center',5);
  const L=inapp?['Open this link in Chrome or','Safari first (⋯ menu →','Open in browser), then','tap INSTALL AS APP again']:ios?['1. Open this page in Safari','2. Tap the Share button ⬆️','3. Tap “Add to Home Screen”','4. Tap Add']:['1. Tap the ⋮ menu in Chrome','2. Tap “Install app” or','“Add to Home screen”','3. Tap Install'];
  L.forEach((t,i)=>tt(t,W/2,200+i*46,17,'#fff','center',3));tt('TAP TO CLOSE',W/2,520,15,Y,'center',3)}
-if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)){const had=!!navigator.serviceWorker.controller;let rl=false;
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl&&st!='play'){rl=true;location.reload()}});
+ navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{r.update();document.addEventListener('visibilitychange',()=>{if(!document.hidden)r.update()})}).catch(()=>{})}
 </script></body></html>
