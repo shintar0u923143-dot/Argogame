@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v18';
+const VER='v20';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -49,7 +49,7 @@ const stg=()=>bd%3,lp=()=>(bd/3)|0;
 const dif=()=>Math.min(3.2,.8+.45*bd+Math.min(.7,stT/180*.7));   // ramps up during each stage and jumps after every boss
 const BX=W-36,BY=H-92;   // bomb button
 const mkP=()=>({skill:'',sp:0,x:W/2,y:H-130,wp:'drill',cols:1,t:{eye:0,glove:0,helm:0,aid:0},last:'',inv:0,li:3,cd:0,tilt:0,bx:[],beam:0,boost:0,bLeft:0,bAcc:0,bombs:0,strk:0,pc:0,dl:0,bm:[]});
-function init(){P=mkP();P.inv=1.5;B=[];E=[];X=[];U=[];F=[];O=[];score=0;tm=0;spT=1.2;obT=7;mT=4;bd=0;boss=null;warnT=0;stT=0;prevT=0;glDone=0;adDone=0;toolDone=false;boostDone=false;bombFx=0;shockT=0;SK=null;hs=0;shake=0;toastT=0;FX=[];T=[];BV=60;punch=0;bannerT=3.2;flash=0;bgPrev=0;bgFade=0;tx=W/2;ty=H-150;pause=false;st='play'}
+function init(){P=mkP();P.inv=1.5;B=[];E=[];X=[];U=[];F=[];O=[];score=0;tm=0;spT=1.2;obT=7;mT=4;bd=0;boss=null;warnT=0;stT=0;prevT=0;glDone=0;adDone=0;toolDone=false;buildSch();boostDone=false;bombFx=0;shockT=0;SK=null;hs=0;shake=0;toastT=0;FX=[];T=[];BV=60;punch=0;bannerT=3.2;flash=0;bgPrev=0;bgFade=0;tx=W/2;ty=H-150;pause=false;st='play'}
 function pt(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left-ox)/sc,(e.clientY-r.top-oy)/sc]}
 cv.addEventListener('pointerdown',e=>{const[x,y]=pt(e);tch=true;
  if(howInst){howInst=false;return}
@@ -75,7 +75,9 @@ const ht=(e,x,y,r)=>Math.hypot(x-e.x,y-e.y)<e.r+r;
 const bossHit=(x,y,r)=>{if(!boss||boss.y<-10)return false;const dx=(x-boss.x)/(boss.hw+r),dy=(y-boss.y)/(boss.hh+r);return dx*dx+dy*dy<1};
 const obHit=(o,x,y,r)=>Math.abs(x-o.x)<o.hw*(o.im=='ob3a'?.8:.85)+r&&Math.abs(y-o.y)<o.hh*(o.im=='ob3a'?.55:.8)+r;
 function boom(x,y,c,n){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=40+Math.random()*160;F.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:.5+Math.random()*.4,c})}}
-function drop(x,y){let k;if(P.wp!='drill'&&Math.random()<.25)k=P.wp;else{const r=Math.random();k=r<.15?'heat':r<.3?'nail':r<.45?'disc':r<.72?'eye':'helm'}U.push({k,x,y})}
+function drop(x,y){}   /* no random drops: every power-up is scheduled */
+let SCH=[];
+function buildSch(){SCH=[];['heat','nail','disc'].forEach((k,t)=>{for(let i=0;i<9;i++)SCH.push({f:.04+.86*(i+t/3)/9,k})});const pp=['eye','glove','helm'],pl=pp.concat([0,1].map(()=>pp[Math.random()*3|0])).sort(()=>Math.random()-.5);pl.forEach((k,i)=>SCH.push({f:.11+.8*i/4,k}));SCH.sort((a,b)=>a.f-b.f)}
 const MC={bee:Y,ant:'#b5532a',drone:'#7fd0ff'};
 function kill(e,gain=true,nd){if(e.dead)return;if(gain)score+=e.pts;exFx(e.x,e.y,26);boom(e.x,e.y,MC[e.k],9);e.dead=1;if(gain&&!nd&&Math.random()<.075)drop(e.x,e.y)}
 function bhit(d){if(!boss)return;boss.hp-=d;boss.fl=.08;if(boss.hp<=0)bossDie()}
@@ -86,8 +88,8 @@ function hurt(){if(P.inv>0||safe())return;
 function clearAll(){for(const e of E){boom(e.x,e.y,MC[e.k],7);e.dead=1}for(const o of O)boom(o.x,o.y,'#c9a36b',12);O=[];X=[];if(boss)bhit(boss.mx*.08);flash=.5;flashC=COL.glove}
 function toast(m){toastM=m;toastT=2.6}
 function quit(){pause=false;if(score>0){submit();if(score>hi){hi=score;try{localStorage.setItem('ap_hi',hi)}catch(e){}}}st='title'}
-function toolUp(k,x,y){if(P.wp==k){if(P.cols<MAXC[k])P.cols++;else P.dl=Math.min(10,P.dl+1)}else{if(P.skill)ftxt(SKL[P.skill].n+' LOST',P.x,P.y-80,'#ff8a80');P.wp=k;P.cols=1;P.dl=0;P.skill='';P.sp=0}
- const nm=TOOLS[k][0];ftxt(P.dl>0?nm+dlTxt():P.cols>=MAXC[k]?(k=='heat'?'MEGA HEAT BEAM!':nm+' MAX x'+P.cols):nm+' x'+P.cols,x,y,'#fff');skGain(k)}
+function toolUp(k,x,y,ng){if(P.wp==k){if(P.cols<MAXC[k])P.cols++;else P.dl=Math.min(10,P.dl+1)}else{if(P.skill)ftxt(SKL[P.skill].n+' LOST',P.x,P.y-80,'#ff8a80');P.wp=k;P.cols=1;P.dl=0;P.skill='';P.sp=0}
+ const nm=TOOLS[k][0];ftxt(P.dl>0?nm+dlTxt():P.cols>=MAXC[k]?(k=='heat'?'MEGA HEAT BEAM!':nm+' MAX x'+P.cols):nm+' x'+P.cols,x,y,'#fff');if(!ng)skGain(k)}
 /* ===== POWER TOOL SKILLS (earned at x7 of a tool, usable only in boss fights) ===== */
 const SKL={heat:{n:'WATER BLAST',img:'sk_water',ic:'skb_water',c:'58,168,255',e:'💦'},disc:{n:'ARGO SAW',img:'sk_saw',ic:'skb_saw',c:'255,170,30',e:'🪚'},nail:{n:'ARGO HAMMER',img:'sk_hammer',ic:'skb_hammer',c:'245,184,0',e:'🔨'}};
 const SKO=['heat','disc','nail'];
@@ -95,7 +97,7 @@ const SKO=['heat','disc','nail'];
 const LOGO_AT={sk_water:[.676,.614,.5,-Math.PI/2],sk_saw:[.542,.729,.27,0],sk_hammer:[.765,.645,.17,-Math.PI/2]},BLADE_AT=[.53,.365,.348,.28];
 function skBtns(){return P.skill?[{k:P.skill,x:36,y:H-108}]:[]}
 const skReady=()=>!!boss&&!!boss.in&&!boss.sku&&!SK;
-function skGain(k){if(P.wp!=k)return;P.sp++;if(!P.skill&&P.sp>=7&&P.cols>=7){P.skill=k;P.sp=0;burst(36,H-108,'helm',26);toast(SKL[k].n+' READY! (BOSS ONLY)');flash=.25;flashC=SKL[k].c}}
+function skGain(k){if(P.wp!=k)return;P.sp=Math.min(7,P.sp+1);if(!P.skill&&P.sp>=7){P.skill=k;burst(36,H-108,'helm',26);toast(SKL[k].n+' READY! (BOSS ONLY)');flash=.25;flashC=SKL[k].c}}
 function useSkill(k){if(P.skill!=k||!skReady())return;P.skill='';P.sp=0;boss.sku=1;SK={k,t:0,dealt:0,hit:0,tx:boss.x,ty:boss.y};X=[];punch=.2;shake=.3;flash=.4;flashC=SKL[k].c}
 function updSkill(dt){if(!SK)return;const s=SK,b=boss;s.t+=dt;if(b){s.tx=b.x;s.ty=b.y}
  const tot=.3*(b?b.mx:0);
@@ -162,7 +164,9 @@ function drawSkill(){if(!SK)return;const s=SK,t=s.t,k=s.k,tx=s.tx,ty=s.ty,fin=k=
     glow('white',ix,iy,140*(1-q),1-q);g.restore();g.globalAlpha=1;
     const sz=Math.min(1,q*6);if(q<.8){g.save();g.translate(W/2,ty+150);g.rotate(-.12);g.scale(.6+.6*sz,.6+.6*sz);g.globalAlpha=Math.min(1,(.8-q)*4);tt('SMASH!',0,0,48,Y,'center',5);g.restore();g.globalAlpha=1}}}}
  bannerSk(t,SKL[k].n)}
-function drawSkBtns(){for(const s of skBtns()){const L=SKL[s.k],on=skReady(),p=on?1+.08*Math.sin(tm*8):1;g.save();if(on){g.shadowColor=`rgb(${L.c})`;g.shadowBlur=22}
+function drawSkBtns(){if(!P.skill&&SKL[P.wp]){const L=SKL[P.wp],x=36,y=H-108,f=P.sp/7;g.save();g.fillStyle='rgba(0,0,0,.5)';g.beginPath();g.arc(x,y,24,0,7);g.fill();g.globalAlpha=.4;if(ok(L.ic))spr(L.ic,x,y,50,0,50);else em(L.e,x,y,20);g.restore();g.globalAlpha=1;
+ g.strokeStyle='rgba(255,255,255,.2)';g.lineWidth=4;g.beginPath();g.arc(x,y,27,0,7);g.stroke();g.strokeStyle=`rgb(${L.c})`;g.beginPath();g.arc(x,y,27,-Math.PI/2,-Math.PI/2+Math.PI*2*f);g.stroke();tt('SKILL '+P.sp+'/7',x,y+37,9,'#ddd','center',2)}
+for(const s of skBtns()){const L=SKL[s.k],on=skReady(),p=on?1+.08*Math.sin(tm*8):1;g.save();if(on){g.shadowColor=`rgb(${L.c})`;g.shadowBlur=22}
  g.fillStyle=on?'rgba(20,20,26,.85)':'rgba(0,0,0,.5)';g.strokeStyle=on?Y:'rgba(255,255,255,.35)';g.lineWidth=3;g.beginPath();g.arc(s.x,s.y,26*p,0,7);g.fill();g.stroke();g.restore();
  g.globalAlpha=on?1:.45;if(ok(L.ic))spr(L.ic,s.x,s.y,60*p,0,60*p);else em(L.e,s.x,s.y,24);g.globalAlpha=1;
  if(on){g.save();g.globalCompositeOperation='lighter';glow('helm',s.x,s.y,42,.25+.15*Math.sin(tm*8));g.restore();g.globalAlpha=1;tt('TAP!',s.x,s.y+37,11,Y,'center',2)}else tt(boss&&boss.sku?'NEXT BOSS':'BOSS ONLY',s.x,s.y+37,9,'#ccc','center',2)}}
@@ -173,7 +177,7 @@ function pick(u){score+=50;
  else{P.last=u.k;P.t[u.k]=Math.min(CAP[u.k],P.t[u.k]+DUR[u.k]);burst(P.x,P.y,u.k,22);
   if(u.k=='glove'){ftxt('MAGNET SHIELD 10s',P.x,P.y-50,'#7dff9a')}
   else if(u.k=='aid'){P.li=Math.min(6,P.li+1);flash=.3;flashC=COL.aid;ftxt('FIRST AID +1 ♥ · IMMUNE 7s',P.x,P.y-50,'#ff8a9a')}
-  else{flash=.25;flashC=COL[u.k];ftxt(u.k=='eye'?'GOGGLE SHIELD 7s':'HELMET REFLECT 10s',P.x,P.y-50,`rgb(${COL[u.k]})`);if(u.k=='eye'&&P.wp!='drill')toolUp(P.wp,P.x,P.y-78)}}
+  else{flash=.25;flashC=COL[u.k];ftxt(u.k=='eye'?'GOGGLE SHIELD 7s':'HELMET REFLECT 10s',P.x,P.y-50,`rgb(${COL[u.k]})`);if(u.k=='eye'&&P.wp!='drill')toolUp(P.wp,P.x,P.y-78,1)}}
  if(++P.pc>=5){P.pc=0;if(P.bombs<5){P.bombs++;burst(BX,BY,'helm',16);ftxt('⚡ SHOCK +1',BX-40,BY-40,Y)}}}
 let shockT=0,shockR=0,shX=0,shY=0,shBoss=false;
 function useBomb(){if(P.bombs<=0||st!='play'||pause||shockT>0)return;P.bombs--;shockT=1.6;shockR=10;shX=P.x;shY=P.y;shBoss=false;shake=.6;punch=.22;flash=.3;flashC='255,240,160';burst(P.x,P.y,'helm',40);burst(P.x,P.y,'white',20)}
@@ -181,7 +185,7 @@ function updShock(dt){if(shockT<=0)return;shockT-=dt;shockR+=760*dt;
  for(const e of E)if(!e.dead&&e.y>-20&&Math.hypot(e.x-shX,e.y-shY)<shockR+e.r){exFx(e.x,e.y,30);kill(e,true,1)}
  for(const s of X)if(!s.dead&&Math.hypot(s.x-shX,s.y-shY)<shockR){s.dead=1;FX.push({t:'sp',k:'helm',x:s.x,y:s.y,vx:0,vy:0,l:.3,ml:.3,r:4})}
  for(const o of O)if(!o.dead&&Math.hypot(o.x-shX,o.y-shY)<shockR+o.hw){o.dead=1;boom(o.x,o.y,'#c9a36b',14);exFx(o.x,o.y,40)}
- if(boss&&!shBoss&&Math.hypot(boss.x-shX,boss.y-shY)<shockR+boss.hw){shBoss=true;const bx=boss.x,by=boss.y;exFx(bx,by,70);burst(bx,by,'helm',30);ftxt('-10% BOSS HP',bx,by+50,Y);bhit(boss.mx*.1)}}
+ if(boss&&!shBoss&&Math.hypot(boss.x-shX,boss.y-shY)<shockR+boss.hw){shBoss=true;const bx=boss.x,by=boss.y;exFx(bx,by,70);burst(bx,by,'helm',30);ftxt('-5% BOSS HP',bx,by+50,Y);bhit(boss.mx*.05)}}
 function near(b){let t=null,d=1e9;for(const e of E){if(e.dead||e.y>b.y)continue;const q=Math.hypot(e.x-b.x,e.y-b.y);if(q<d){d=q;t=e}}if(boss&&boss.y<b.y){const q=Math.hypot(boss.x-b.x,boss.y-b.y);if(q<d)t=boss}return t}
 function shotA(x,y,k,spd,a,ex){X.push(Object.assign({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,k,r:k=='laser'?5:k=='missile'?7:6,rf:0,ay:0,hm:0},ex))}
 const aimA=(x,y)=>Math.atan2(P.y-y,P.x-x);
@@ -200,12 +204,12 @@ function mkBoss(){const s=stg(),L=lp(),mx=[800,1300,2200][s]*(1+.6*L);
  if(P.skill)setTimeout(()=>toast('USE YOUR POWER TOOL SKILL!'),2500);
  boss={k:'boss'+(s+1),x:W/2,y:-110,hw:[64,66,70][s],hh:[54,56,60][s],hp:mx,mx,t:0,ph:0,ft:2.2,fl:0,vol:0,lph:1,str:0,sT:0};mT=5}
 function bossDie(){const b=boss;for(let i=0;i<10;i++)exFx(b.x+(Math.random()-.5)*b.hw*2,b.y+(Math.random()-.5)*b.hh*2,40+Math.random()*40);burst(b.x,b.y,'fire',50);shake=.7;boom(b.x,b.y,'#fff',60);boom(b.x,b.y,Y,40);boom(b.x,b.y,R,30);score+=500+250*bd;bgPrev=stg();bgFade=1;bd++;boss=null;stT=0;prevT=score;glDone=0;adDone=0;warnT=0;boostDone=false;
- for(const e of E){boom(e.x,e.y,MC[e.k],6);e.dead=1}X=[];O=[];U.push({k:['heat','nail','disc'][Math.random()*3|0],x:W/2-50,y:-20},{k:Math.random()<.5?'eye':'helm',x:W/2+50,y:-50});flash=.6;flashC='255,255,255';bannerT=3.5}
+ for(const e of E){boom(e.x,e.y,MC[e.k],6);e.dead=1}X=[];O=[];buildSch();flash=.6;flashC='255,255,255';bannerT=3.5}
 /* Boss attacks: each boss has more patterns than the last; every boss gets faster and denser as its HP drops (3 phases) and on every loop */
 function updBoss(dt){const b=boss,s=stg(),L=lp();b.t+=dt;if(b.fl>0)b.fl-=dt;
  if(b.y<128&&!b.in){b.y+=80*dt;return}b.in=1;
  const ph=b.hp<b.mx*.3?3:b.hp<b.mx*.65?2:1,spd=1+.12*L+(ph-1)*.07;
- if(ph!=b.lph){b.lph=ph;toast(ph==2?'BOSS IS ANGRY!':'BOSS ENRAGED!');flash=.3;flashC='225,37,27';if(ph==3)U.push({k:'aid',x:60+Math.random()*(W-120),y:-20})}
+ if(ph!=b.lph){b.lph=ph;toast(ph==2?'BOSS IS ANGRY!':'BOSS ENRAGED!');flash=.3;flashC='225,37,27';if(ph==3){U.push({k:'aid',x:60+Math.random()*(W-120),y:-20});['heat','nail','disc'].forEach((k,i)=>U.push({k,x:70+i*110,y:-40-i*50}))}}
  b.ph+=dt*[.9,.7,1.1][s]*(1+.15*(ph-1));b.x=W/2+Math.sin(b.ph)*(W/2-b.hw-10);b.y=128+Math.sin(b.t*1.4)*12;
  if(b.str>0){b.str-=dt;b.sT-=dt;if(b.sT<=0){b.sT=b.sInt;for(let i=0;i<b.arms;i++)shotA(b.x,b.y+10,b.sk,b.sSp,b.sa+i*2*Math.PI/b.arms);b.sa+=b.sRot}}
  b.ft-=dt;if(b.ft>0||b.str>0)return;
@@ -250,7 +254,7 @@ function upd(dt){if(hs>0){hs-=dt;updFx(dt*.2);return}tm+=dt;stT+=dt;const d=dif(
  P.beam=w=='heat'?1:0;
  if(w=='heat'){const c=P.x+mz;P.bm=n>=7?[{x:c,w:20,d:16},{x:c-28,w:9,d:7},{x:c+28,w:9,d:7}]:P.bx.map(x=>({x,w:7,d:5}));
   for(const b of P.bm){const dd=b.d*dm*dt;
-   for(const e of E)if(!e.dead&&e.y<P.y-10&&Math.abs(e.x-b.x)<e.r+b.w/2){e.hp-=dd;if(e.hp<=0)kill(e)}
+   for(const e of E)if(!e.dead&&e.y<P.y-10&&Math.abs(e.x-b.x)<e.r+b.w/2+4){e.hp-=dd*3;if(e.hp<=0)kill(e)}
    if(boss&&boss.y>0&&Math.abs(b.x-boss.x)<boss.hw*.9+b.w/2)bhit(dd)}}
  else if(P.cd<=0){
   if(w=='drill'){P.cd=.2;B.push({x:P.x+mz,y:P.y-38,vx:0,vy:-620,dmg:1,r:4,k:'b'})}
@@ -263,14 +267,13 @@ function upd(dt){if(hs>0){hs-=dt;updFx(dt*.2);return}tm+=dt;stT+=dt;const d=dif(
   else{
    spT-=wd;if(spT<=0){spawn(d);spT=Math.max(.8,1.4/(.6+d*.7))*(.75+Math.random()*.5)}
    obT-=wd;if(obT<=0){spawnOb(d);obT=Math.max(1.8,6/(.6+d))*(.8+Math.random()*.4)}
-   if(!toolDone&&tm>5){toolDone=true;U.push({k:'nail',x:60+Math.random()*(W-120),y:-20})}
+   {let n=0;while(SCH.length&&score>=prevT+(bAt(bd)-prevT)*SCH[0].f){const q=SCH.shift();U.push({k:q.k,x:50+Math.random()*(W-100),y:-20-n*45});n++}}
    const span=bAt(bd)-prevT;
    if(!boostDone&&score>=prevT+span*.55){boostDone=true;U.push({k:'logo',lg:1,x:70+Math.random()*(W-140),y:-30})}
-   if(glDone<1&&score>=prevT+span*.4){glDone=1;U.push({k:'glove',g:1,x:60+Math.random()*(W-120),y:-20})}
-   else if(glDone==1&&score>=prevT+span*.75){glDone=2;U.push({k:'glove',g:1,x:60+Math.random()*(W-120),y:-20})}
    if(adDone<1&&score>=prevT+span*.25){adDone=1;U.push({k:'aid',ad:1,x:60+Math.random()*(W-120),y:-20})}
    else if(adDone==1&&score>=prevT+span*.6){adDone=2;U.push({k:'aid',ad:1,x:60+Math.random()*(W-120),y:-20})}}
- }else{if(!SK)updBoss(wd);if(boss&&boss.y>=118){mT-=wd;if(mT<=0){mT=5.5;spawn(d,1)}}
+ }else{if(!SK)updBoss(wd);
+  if(boss&&boss.in){const pp=['eye','glove','helm'];if(!boss.pq)boss.pq=pp.sort(()=>Math.random()-.5).slice(0,2);if(!boss.p1&&boss.hp<boss.mx*.75){boss.p1=1;U.push({k:boss.pq[0],x:60+Math.random()*(W-120),y:-20})}if(!boss.p2&&boss.hp<boss.mx*.45){boss.p2=1;U.push({k:boss.pq[1],x:60+Math.random()*(W-120),y:-20})}}if(boss&&boss.y>=118){mT-=wd;if(mT<=0){mT=5.5;spawn(d,1)}}
   if(boss&&bossHit(P.x,P.y,10))hurt()}
  /* mobs */
  for(const e of E){
@@ -424,41 +427,36 @@ function title(){g.fillStyle='rgba(0,0,0,.4)';g.fillRect(0,0,W,H);if(ok('logo'))
 let hp=0,helpSeen=false;try{helpSeen=!!localStorage.getItem('ap_help')}catch(e){}
 function openHelp(){st='help';hp=0;helpSeen=true;try{localStorage.setItem('ap_help','1')}catch(e){}}
 const HELP=[
- {t:'HOW TO PLAY',ic:[],r:[
-  ['☝️','Drag anywhere to fly. Your hero fires automatically.'],
-  ['💥','Shoot enemies to score. Dodge logs, cactus, ruins and beams: your shots pass through them, but touching one costs a life.'],
-  ['♥','You start with 3 lives. Each hit costs 1 life and 1 weapon column.'],
-  ['👑','Reach 4,500 · 12,000 · 20,000 points to fight each stage boss. Beat Stage 3 and the loop restarts: faster and tougher.'],
-  ['⏸','Pause anytime with the button at the top.']]},
- {t:'TOOL POWER-UPS',ic:['pu_heat','pu_nail','pu_disc'],r:[
-  ['pu_heat','HEAT GUN: laser beams that burn everything in their line. The 7th pickup fuses them into the MEGA HEAT BEAM.'],
-  ['pu_nail','NAIL GUN: up to 7 nails in a wide fan. Best against swarms.'],
-  ['pu_disc','GRINDER: up to 7 bouncing discs. Every extra grinder fires faster.'],
-  ['➕','Same tool again = +1 column. Past 7 = more power. A DIFFERENT tool restarts you at x1.']]},
- {t:'PPE SHIELDS',ic:['pu_eye','pu_glove','pu_helm','pu_aid'],r:[
-  ['pu_eye','GOGGLES: blue shield for 7s, and +1 level for your current tool.'],
-  ['pu_glove','GLOVES: green shield for 10s. A magnet pulls every PPE on screen to you.'],
-  ['pu_helm','HELMET: yellow shield for 10s that bounces enemy shots back.'],
-  ['pu_aid','FIRST AID: +1 life and 7s immunity. 2 appear before each boss, 1 more when it gets enraged.'],
-  ['⏱','Grab the same PPE again to add more time.']]},
- {t:'SPECIAL MOVES',ic:[],r:[
-  ['🚀','ARGOPOWER BOOST: the glowing logo appears once per stage. Grab it for a speed rush, full invincibility and +1,000 points.'],
-  ['shock','ARGOPOWER SHOCK: every 5 power-ups = 1 Shock (max 5). Tap ⚡ to wipe out enemies, shots and obstacles, and take 10% off a boss.'],
-  ['skb_hammer','POWER TOOL SKILL: reach x7 with one tool to unlock its skill. Heat Gun → WATER BLAST, Grinder → ARGO SAW, Nail Gun → ARGO HAMMER. Each takes 30% of a boss\'s HP. Boss fights only, once per boss.']]},
- {t:'PRO TIPS',ic:[],r:[
-  ['⭐','Pick ONE tool and stick with it. Be at x7 before the boss so your Power Tool Skill is ready.'],
-  ['⚠️','Switching tools loses your skill. Skip tool drops you don\'t want.'],
-  ['⚡','Save a Shock for the boss\'s bullet storms.'],
-  ['😡','Bosses get ANGRY at 65% HP and ENRAGED at 30%. Use your skill early, or hold it for the final push.'],
-  ['⬇️','Fly low on the screen: you get more time to dodge.'],
-  ['🏆','Your score is saved when the game ends. Check the Top 100!']]}];
+ {t:'BASICS',r:[
+  ['hero','FLY & SHOOT','Drag to move. You fire automatically.'],
+  ['ob1a','DODGE','Obstacles hurt you. Your shots pass through.'],
+  ['👑','BEAT THE BOSS','Fill the score bar to face each stage boss.'],
+  ['ui_pause','PAUSE','Tap anytime to take a break.']]},
+ {t:'POWER-UPS',r:[
+  ['pu_heat','HEAT GUN','Burning laser beam.'],
+  ['pu_nail','NAIL GUN','Wide spread of nails.'],
+  ['pu_disc','GRINDER','Bouncing saw discs.'],
+  ['pu_eye','GOGGLES','Shield + tool boost.'],
+  ['pu_glove','GLOVES','Shield + power-up magnet.'],
+  ['pu_helm','HELMET','Bounces shots back.'],
+  ['pu_aid','FIRST AID','+1 life.']],foot:'Grab the SAME tool again for more power!'},
+ {t:'SPECIALS',r:[
+  ['logo','ARGOPOWER BOOST','Catch the glowing logo!'],
+  ['shock','SHOCK','Collect power-ups to charge it. Tap to clear the screen.'],
+  ['skills','POWER TOOL SKILL','Max out ONE tool before the boss... and see what happens!']],foot:'Basta Argo, POWER!'}];
 function wrapT(s,x,y,mw,z,c,lh){g.font='500 '+z+'px '+FNT;g.textAlign='left';g.textBaseline='middle';g.fillStyle=c;const ws=s.split(' ');let line='',n=0;
  for(const w of ws){const t=line?line+' '+w:w;if(g.measureText(t).width>mw&&line){g.fillText(line,x,y+n*lh);line=w;n++}else line=t}if(line){g.fillText(line,x,y+n*lh);n++}return n}
-function helpDraw(){g.fillStyle='rgba(0,0,0,.5)';g.fillRect(0,0,W,H);panel(10,14,W-20,H-28);const pg=HELP[hp];
+function helpIcon(ic,x,y){
+ if(ic=='hero'){hero(x,y,sex,0,'',0,0);return}
+ if(ic=='logo'){if(ok('orb')){g.save();g.globalCompositeOperation='lighter';spr('orb',x,y,64,tm);g.restore();g.globalAlpha=1}logo(x,y,34,8);return}
+ if(ic=='skills'){['skb_water','skb_saw','skb_hammer'].forEach((k,i)=>{if(ok(k))spr(k,x-14+i*14,y+(i==1?-6:4),28,0,28);else em(['💦','🪚','🔨'][i],x-14+i*14,y,16)});return}
+ if(ic.length>2&&ok(ic)){spr(ic,x,y,ic=='ob1a'?32:40,0,ic=='ob1a'?48:40);return}
+ em(ic,x,y,26)}
+function helpDraw(){g.fillStyle='rgba(0,0,0,.5)';g.fillRect(0,0,W,H);panel(10,14,W-20,H-28);const pg=HELP[hp],n=pg.r.length,RH=n>5?56:84;
  tt(pg.t,W/2,50,26,Y,'center',3);tt((hp+1)+' / '+HELP.length,W/2,74,11,'#ccc','center',0);
- let y=106;for(const [ic,tx] of pg.r){const IX=52;
-  if(ic.length>2&&ok(ic)){if(ic=='logo')logo(IX+2,y+9,38,6);else spr(ic,IX,y+8,32,0,32)}else{g.font='20px serif';g.textAlign='center';g.textBaseline='middle';g.fillStyle=ic=='♥'?R:'#fff';g.fillText(ic,IX,y+8)}
-  const n=wrapT(tx,80,y,W-136,15,'#f2f2f2',20);y+=Math.max(38,n*20+14)}
+ let y=n>5?120:132;for(const [ic,name,tx] of pg.r){g.fillStyle='rgba(255,255,255,.06)';rr(40,y-24,W-80,RH-8,10);g.fill();
+  helpIcon(ic,72,y-24+(RH-8)/2);tt(name,108,y-8,15,Y,'left',2,W-160);wrapT(tx,108,y+12,W-160,13,'#eee',16);y+=RH}
+ if(pg.foot)tt(pg.foot,W/2,Math.min(512,y),13,'#fff','center',2);
  for(let i=0;i<HELP.length;i++){g.fillStyle=i==hp?Y:'rgba(255,255,255,.3)';g.beginPath();g.arc(W/2+(i-(HELP.length-1)/2)*16,548,i==hp?5:4,0,7);g.fill()}
  if(hp>0)btn(30,532,64,32,'◀','dark',16);if(hp<HELP.length-1)btn(W-94,532,64,32,'▶','gold',16);
  btn(110,582,140,34,hp<HELP.length-1?'✕  CLOSE':'✔  GOT IT!',hp<HELP.length-1?'dark':'red',15)}
