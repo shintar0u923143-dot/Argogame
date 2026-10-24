@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v23';
+const VER='v24';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -23,6 +23,7 @@ if(!did){did=Math.random().toString(36).slice(2,12);try{localStorage.setItem('ap
 nmEl.value=pname;
 const IM={};
 ['ui_panel','ui_btn_red','ui_btn_dark','ui_row','ui_medal1','ui_medal2','ui_medal3','ui_pod1','ui_pod2','ui_pod3','ui_crown','m','f','m_eye','m_glove','m_helm','f_eye','f_glove','f_helm','bee1','bee2','ant1','ant2','drone1','drone2','boss1','boss2','boss3','ob1a','ob1b','ob2a','ob2b','ob3a','ob3b','bg1','bg2','bg3','heat','nail','disc','glove','helm','eye','pdisc','sting','spit','dlaser','bolt','logo','bomb','missile','fx_jet','antw1','antw2','antw3','antw4','fx_splash','sk_water','sk_saw','sk_hammer','sk_blade','skb_water','skb_saw','skb_hammer','pu_aid','shock','fx_shock','ui_pause','aura1','aura2','aura3','aura4','orb','pu_heat','pu_nail','pu_disc','pu_eye','pu_glove','pu_helm','fx_boom1','fx_boom2','fx_boom3','fx_boom4'].forEach(k=>{const i=new Image();i.src='assets/'+k+(k.slice(0,2)=='bg'?'.jpg':'.png');IM[k]=i});
+const SOLIDBG={};function bgCheck(k){const i=IM[k];if(!i||!i.naturalWidth)return true;if(SOLIDBG[k]===undefined){try{const c=document.createElement('canvas');c.width=c.height=8;const x=c.getContext('2d');x.drawImage(i,0,0,8,8);SOLIDBG[k]=x.getImageData(0,0,1,1).data[3]>200}catch(e){SOLIDBG[k]=false}}return SOLIDBG[k]}
 const ok=k=>IM[k]&&IM[k].complete&&IM[k].naturalWidth;
 function spr(k,x,y,h,rot,mw){const i=IM[k];let w=h*i.naturalWidth/i.naturalHeight;if(mw&&w>mw){w=mw;h=w*i.naturalHeight/i.naturalWidth}g.save();g.translate(x,y);if(rot)g.rotate(rot);g.drawImage(i,-w/2,-h/2,w,h);g.restore()}
 function go(){const v=nmEl.value.trim().replace(/[<>&"']/g,'').slice(0,12);
@@ -401,7 +402,7 @@ function drawFx(pre){g.save();g.globalCompositeOperation='lighter';
   if(f.t=='fire')glow(f.k,f.x,f.y,f.r*(1.6-p*.6),p*.9);
   else if(f.t=='sp')glow(f.k,f.x,f.y,f.r*2.2,p);
   else if(f.t=='ring'){g.globalAlpha=p;g.strokeStyle=RC[f.k];g.lineWidth=4*p+1;g.beginPath();g.arc(f.x,f.y,f.r+(1-p)*60,0,7);g.stroke()}
-  else if(f.t=='ex'){const fr=Math.min(3,((1-p)*4)|0);if(ok('fx_boom'+(fr+1))){g.save();g.globalCompositeOperation='source-over';g.globalAlpha=Math.min(1,p*2.5);spr('fx_boom'+(fr+1),f.x,f.y,f.r*2.6);g.restore();if(fr==0)glow('white',f.x,f.y,f.r*.7,p)}else{glow('fire',f.x,f.y,f.r*(1.4-p*.6),p*1.2);glow('white',f.x,f.y,f.r*.6*p,p)}}}
+  else if(f.t=='ex'){const fr=Math.min(3,((1-p)*4)|0);if(ok('fx_boom'+(fr+1))){g.save();g.globalCompositeOperation=bgCheck('fx_boom'+(fr+1))?'lighter':'source-over';g.globalAlpha=Math.min(1,p*2.5);spr('fx_boom'+(fr+1),f.x,f.y,f.r*2.6);g.restore();if(fr==0)glow('white',f.x,f.y,f.r*.7,p)}else{glow('fire',f.x,f.y,f.r*(1.4-p*.6),p*1.2);glow('white',f.x,f.y,f.r*.6*p,p)}}}
  g.restore();g.globalAlpha=1}
 function speedLines(){const k=Math.min(1,(BV-60)/560);if(k<=.02)return;g.save();g.globalCompositeOperation='lighter';
  for(const s of SL){const L=s.l*k*1.7,c=s.c<.6?'255,255,255':s.c<.85?'255,210,31':'255,60,40',gr=g.createLinearGradient(s.x,s.y,s.x,s.y+L);gr.addColorStop(0,`rgba(${c},0)`);gr.addColorStop(1,`rgba(${c},${.6*k})`);
