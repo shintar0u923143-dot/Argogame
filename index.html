@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v24';
+const VER='v25';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -48,6 +48,7 @@ const PBX=W/2,PBY=22;   // pause button
    HOW TO ADD A STAGE: copy one entry below and change it.
    span  = points needed (from the previous boss) before this stage's boss appears.
    bg    = background image in assets (jpg).  fb = fallback look if the image is missing (0 forest, 1 desert, 2 site).
+   tiles = optional ['plain','landmark'] background tiles: plays them back to back WITHOUT mirroring, the landmark tile appearing at irregular intervals.
    mob   = enemy type: 'bee' (weaving, stings), 'ant' (marching rows, spit), 'drone' (hover & strafe, lasers). New types need new behaviour code.
    obs   = two obstacles [image, half-width, half-height].
    boss  = img/name/emoji, hp (loop 1), size hw/hh, ai ('bee','ant','drone' attack patterns), shot type, fire interval, move speed.
@@ -61,7 +62,7 @@ const STAGES=[
   boss:{img:'boss3',name:'BATTLE DRONE',emoji:'🛸',hp:1500,hw:70,hh:60,ai:'drone',shot:'laser',rate:1.2,spd:1.1}}];
 const LOOP_SPAN=9000,NST=()=>STAGES.length;
 /* every image a stage names is loaded automatically (backgrounds named bg*.jpg, everything else .png) */
-STAGES.forEach(t=>[t.bg,t.boss.img,...t.obs.map(o=>o[0])].forEach(k=>{if(!IM[k]){const i=new Image();i.src='assets/'+k+(k.slice(0,2)=='bg'?'.jpg':'.png');IM[k]=i}}));
+STAGES.forEach(t=>[t.bg,...(t.tiles||[]),t.boss.img,...t.obs.map(o=>o[0])].forEach(k=>{if(!IM[k]){const i=new Image();i.src='assets/'+k+(k.slice(0,2)=='bg'?'.jpg':'.png');IM[k]=i}}));
 const bAt=n=>{let t=0;for(let i=0;i<Math.min(n+1,NST());i++)t+=STAGES[i].span;return n<NST()?t:t+LOOP_SPAN*(n-NST()+1)};   // 4500, 12000, 20000, then +9000 each
 const stg=()=>bd%NST(),lp=()=>(bd/NST())|0,ST=()=>STAGES[stg()];
 const dif=()=>Math.min(2.8,.8+.32*bd+Math.min(.6,stT/180*.6));   // ramps up during each stage and jumps after every boss
@@ -346,7 +347,11 @@ function bgFb(s){const c=[['#2c6a30','#3f8a3d'],['#dcb872','#c99a52'],['#4a4d55'
   if(s==0){g.fillStyle='#1d4a22';g.beginPath();g.arc(d.x,y,d.r,0,7);g.fill();g.fillStyle='#2f7a35';g.beginPath();g.arc(d.x-3,y-3,d.r*.7,0,7);g.fill()}
   else if(s==1){g.fillStyle=d.c<.5?'#3f8f3a':'#9b8460';if(d.c<.5){g.fillRect(d.x-4,y-d.r,8,d.r*2);g.fillRect(d.x-12,y-4,8,4);g.fillRect(d.x+4,y-8,8,4)}else{g.beginPath();g.arc(d.x,y,d.r,0,7);g.fill()}}
   else{g.fillStyle='#8d939c';g.fillRect(d.x-d.r,y-5,d.r*2,10);g.fillStyle=Y;g.fillRect(d.x-d.r,y-5,6,10);g.fillRect(d.x+d.r-6,y-5,6,10)}}}
-function bgImg(s,a){if(a<=0)return;g.globalAlpha=a;const k=STAGES[s].bg;
+const tileAt=(T,i)=>{const h=v=>(Math.imul(v,2654435761)>>>0)%3;return h(i)==0&&h(i-1)!=0?T[1]:T[0]};
+function bgImg(s,a){if(a<=0)return;g.globalAlpha=a;const T=STAGES[s].tiles;
+ if(T&&ok(T[0])&&ok(T[1])){const i0=IM[T[0]],dh=Math.max(W*i0.naturalHeight/i0.naturalWidth,H),dw=dh*i0.naturalWidth/i0.naturalHeight,pos=bgS%dh,n=Math.floor(bgS/dh);
+  for(let j=-1;j<=0;j++)g.drawImage(IM[tileAt(T,n-j)],(W-dw)/2,pos+j*dh,dw,dh);g.fillStyle='rgba(0,0,0,.15)';g.fillRect(0,0,W,H);g.globalAlpha=1;return}
+ const k=STAGES[s].bg;
  if(ok(k)){const im=IM[k];let dh=Math.max(W*im.naturalHeight/im.naturalWidth,H),dw=dh*im.naturalWidth/im.naturalHeight;const pos=bgS%dh,n=Math.floor(bgS/dh);
   for(let j=-1;j<=0;j++){const y=pos+j*dh,fl=(n-j)&1;g.save();g.translate((W-dw)/2,fl?y+dh:y);if(fl)g.scale(1,-1);g.drawImage(im,0,0,dw,dh);g.restore()}}
  else bgFb(STAGES[s].fb%3);if(ok(k)){g.fillStyle='rgba(0,0,0,.18)';g.fillRect(0,0,W,H)}g.globalAlpha=1}
