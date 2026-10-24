@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v22';
+const VER='v23';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -53,7 +53,7 @@ const PBX=W/2,PBY=22;   // pause button
    After the last stage the game loops back to stage 1: faster and tougher (LOOP_SPAN points between later bosses). */
 const STAGES=[
  {n:'WESTERN FOREST',span:4500,bg:'bg1',fb:0,mob:'bee',obs:[['ob1a',44,38],['ob1b',42,44]],
-  boss:{img:'boss1',name:'MECHANICAL BEE',emoji:'🐝',hp:800,hw:64,hh:54,ai:'bee',shot:'sting',rate:1.45,spd:.9}},
+  boss:{img:'boss1',name:'MECHANICAL BEE',emoji:'🐝',hp:800,hw:48,hh:74,ai:'bee',shot:'sting',rate:1.45,spd:.9}},
  {n:'THE DRYLANDS',span:7500,bg:'bg2',fb:1,mob:'ant',obs:[['ob2a',24,40],['ob2b',40,40]],
   boss:{img:'boss2',name:'MECHA ANT QUEEN',emoji:'🐜',hp:1150,hw:66,hh:56,ai:'ant',shot:'spit',rate:1.3,spd:.7}},
  {n:'CONSTRUCTION SITE',span:8000,bg:'bg3',fb:2,mob:'drone',obs:[['ob3a',76,37],['ob3b',19,60]],
@@ -401,7 +401,7 @@ function drawFx(pre){g.save();g.globalCompositeOperation='lighter';
   if(f.t=='fire')glow(f.k,f.x,f.y,f.r*(1.6-p*.6),p*.9);
   else if(f.t=='sp')glow(f.k,f.x,f.y,f.r*2.2,p);
   else if(f.t=='ring'){g.globalAlpha=p;g.strokeStyle=RC[f.k];g.lineWidth=4*p+1;g.beginPath();g.arc(f.x,f.y,f.r+(1-p)*60,0,7);g.stroke()}
-  else if(f.t=='ex'){const fr=Math.min(3,((1-p)*4)|0);if(ok('fx_boom'+(fr+1))){g.globalAlpha=Math.min(1,p*2.5);spr('fx_boom'+(fr+1),f.x,f.y,f.r*2.4)}else{glow('fire',f.x,f.y,f.r*(1.4-p*.6),p*1.2);glow('white',f.x,f.y,f.r*.6*p,p)}}}
+  else if(f.t=='ex'){const fr=Math.min(3,((1-p)*4)|0);if(ok('fx_boom'+(fr+1))){g.save();g.globalCompositeOperation='source-over';g.globalAlpha=Math.min(1,p*2.5);spr('fx_boom'+(fr+1),f.x,f.y,f.r*2.6);g.restore();if(fr==0)glow('white',f.x,f.y,f.r*.7,p)}else{glow('fire',f.x,f.y,f.r*(1.4-p*.6),p*1.2);glow('white',f.x,f.y,f.r*.6*p,p)}}}
  g.restore();g.globalAlpha=1}
 function speedLines(){const k=Math.min(1,(BV-60)/560);if(k<=.02)return;g.save();g.globalCompositeOperation='lighter';
  for(const s of SL){const L=s.l*k*1.7,c=s.c<.6?'255,255,255':s.c<.85?'255,210,31':'255,60,40',gr=g.createLinearGradient(s.x,s.y,s.x,s.y+L);gr.addColorStop(0,`rgba(${c},0)`);gr.addColorStop(1,`rgba(${c},${.6*k})`);
@@ -571,10 +571,10 @@ function draw(){if(st=='play'){if(shake>0)g.translate((Math.random()-.5)*12*shak
   tt('ARGOPOWER SHOCK!',W/2,LY+sz/8+26,26,Y,'center',4);tt('BASTA ARGO, POWER!',W/2,LY+sz/8+54,15,'#fff','center',3);g.globalAlpha=1}
  if(flash>0){g.fillStyle=`rgba(${flashC},${Math.min(.55,flash)})`;g.fillRect(0,0,W,H)}
  if(st=='play')vignette();
- if(P.boost>0&&st=='play'){const in_=Math.min(1,(6-P.boost)*4),p=(1+.05*Math.sin(tm*10))*(.6+.4*in_);rays(W/2,128,190,16,.28);
-  g.save();g.globalCompositeOperation='lighter';glow('fire',W/2,128,150*p,.55);g.restore();g.globalAlpha=1;
-  logo(W/2,128,230*p,34+Math.sin(tm*12)*14);logoShine(W/2,128,230*p);tt('BASTA ARGO, POWER!',W/2,172,18,Y,'center',4);
-  const n=Math.round(1000-P.bLeft),pz=1+.12*Math.sin(tm*25);tt('+'+n,W/2,210,32*pz,'#fff','center',6);tt('SPEED x1.75  ·  INVINCIBLE',W/2,240,12,'#ffd9a0','center',3)}
+ if(P.boost>0&&st=='play'){const in_=Math.min(1,(6-P.boost)*4),p=(1+.05*Math.sin(tm*10))*(.6+.4*in_);rays(W/2,152,190,16,.28);
+  g.save();g.globalCompositeOperation='lighter';glow('fire',W/2,152,150*p,.55);g.restore();g.globalAlpha=1;
+  logo(W/2,152,230*p,34+Math.sin(tm*12)*14);logoShine(W/2,152,230*p);tt('BASTA ARGO, POWER!',W/2,196,18,Y,'center',4);
+  const n=Math.round(1000-P.bLeft),pz=1+.12*Math.sin(tm*25);tt('+'+n,W/2,234,32*pz,'#fff','center',6);tt('SPEED x1.75  ·  INVINCIBLE',W/2,264,12,'#ffd9a0','center',3)}
  /* HUD */
  tt('SCORE '+score,10,18,16,'#fff','left',3);tt('BEST '+Math.max(hi,score),W-10,18,16,Y,'right',3);tt('♥'.repeat(Math.max(0,P.li)),10,42,18,R,'left',3);
  tt('STAGE '+(bd+1),W-10,42,13,'#fff','right',3);
@@ -588,8 +588,10 @@ function draw(){if(st=='play'){if(shake>0)g.translate((Math.random()-.5)*12*shak
  if(toastT>0&&st=='play'){g.globalAlpha=Math.min(1,toastT*2);tt(toastM,W/2,H-120,18,Y,'center',4);g.globalAlpha=1}
  tt(P.wp=='drill'?'DRILL BOLTS':TOOLS[P.wp][0]+' x'+P.cols+dlTxt(),10,H-14,14,'#fff','left',3);
  if(P.wp!='drill'){for(let i=0;i<MAXC[P.wp];i++){g.fillStyle=i<P.cols?Y:'rgba(255,255,255,.25)';g.fillRect(10+i*14,H-34,11,6)}}
- let hx=W-8;for(const k of['eye','glove','helm','aid'])if(P.t[k]>0){if(ok('pu_'+k))spr('pu_'+k,hx-12,H-24,24,0,24);else if(ok(k))spr(k,hx-12,H-24,24,0,24);else{g.font='22px serif';g.textAlign='center';g.textBaseline='middle';g.fillStyle='#000';g.fillText(PPE[k],hx-12,H-24)}
-  tt(Math.ceil(P.t[k])+'s',hx-12,H-6,11,`rgb(${COL[k]})`,'center',3);hx-=32}
+ {let hx=24;const HY=boss?100:94;for(const k of['eye','glove','helm','aid'])if(P.t[k]>0){const c=COL[k],f=Math.min(1,P.t[k]/DUR[k]),bl=P.t[k]<2&&((tm*8)|0)%2;
+  g.fillStyle='rgba(0,0,0,.55)';g.beginPath();g.arc(hx,HY,15,0,7);g.fill();g.globalAlpha=bl?.4:1;if(ok('pu_'+k))spr('pu_'+k,hx,HY,24,0,24);else em(PPE[k],hx,HY,16);g.globalAlpha=1;
+  g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=3;g.beginPath();g.arc(hx,HY,15,0,7);g.stroke();g.strokeStyle=`rgb(${c})`;g.beginPath();g.arc(hx,HY,15,-Math.PI/2,-Math.PI/2+Math.PI*2*f);g.stroke();
+  tt(Math.ceil(P.t[k])+'s',hx,HY+23,10,`rgb(${c})`,'center',2);hx+=38}}
  if(bannerT>0&&st=='play'){g.globalAlpha=Math.min(1,bannerT);tt('STAGE '+(bd+1),W/2,230,42,Y,'center',6);tt(ST().n,W/2,272,20,'#fff','center',4);g.globalAlpha=1}
  if(warnT>0&&((tm*5)|0)%2){tt('⚠ WARNING ⚠',W/2,250,38,'#ff3b30','center',6);tt(ST().boss.name+' APPROACHING',W/2,290,16,'#fff','center',4)}
  if(st=='over'){g.fillStyle='rgba(0,0,0,.6)';g.fillRect(0,0,W,H);tt('GAME OVER',W/2,220,44,R,'center',6);tt('SCORE '+score,W/2,285,26,'#fff','center',4);
