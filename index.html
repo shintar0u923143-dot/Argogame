@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v27';
+const VER='v28';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -476,7 +476,7 @@ function drawWhip(b){if(!b.wh)return;for(const w of b.wh){if(w.t<0)continue;
   if(q>.4&&q<.75){g.save();g.globalCompositeOperation='lighter';glow('white',tx,ty,26,.9);glow('eye',tx,ty,46,.6);g.restore();g.globalAlpha=1;g.strokeStyle='rgba(230,200,255,.9)';g.lineWidth=2;for(let i=0;i<6;i++){const a=i*1.05+tm*7;g.beginPath();g.moveTo(tx+Math.cos(a)*10,ty+Math.sin(a)*10);g.lineTo(tx+Math.cos(a)*30,ty+Math.sin(a)*30);g.stroke()}}}}}
 /* draws the tail art bent along a curve from the dragon (thick end) to the tip */
 function drawLash(x0,y0,x1,y1,cx,cy,al){const N=26,wk=ok('n_whip')?'n_whip':'n_tailw',im=IM[wk],ready=ok(wk);g.globalAlpha=al;
- for(let i=0;i<N;i++){const u=i/N,v=(i+1)/N,P0=bz(x0,y0,cx,cy,x1,y1,u),P1=bz(x0,y0,cx,cy,x1,y1,v),a=Math.atan2(P1[1]-P0[1],P1[0]-P0[0]),len=Math.hypot(P1[0]-P0[0],P1[1]-P0[1])+2,th=(ok('n_whip')?54:78)*(1-u*.7);
+ for(let i=0;i<N;i++){const u=i/N,v=(i+1)/N,P0=bz(x0,y0,cx,cy,x1,y1,u),P1=bz(x0,y0,cx,cy,x1,y1,v),a=Math.atan2(P1[1]-P0[1],P1[0]-P0[0]),len=Math.hypot(P1[0]-P0[0],P1[1]-P0[1])+2,th=(ok('n_whip')?62:78)*(1-u*.7);
   g.save();g.translate(P0[0],P0[1]);g.rotate(a);if(ready){const sw=im.naturalWidth/N;g.drawImage(im,i*sw,0,sw,im.naturalHeight,0,-th/2,len,th)}else{g.fillStyle='#4b2a6b';g.fillRect(0,-th/2,len,th)}g.restore()}g.globalAlpha=1}
 const bz=(x0,y0,cx,cy,x1,y1,u)=>{const m=1-u;return[m*m*x0+2*m*u*cx+u*u*x1,m*m*y0+2*m*u*cy+u*u*y1]};
 function dboss(){const b=boss;g.save();g.translate(b.x,b.y);
