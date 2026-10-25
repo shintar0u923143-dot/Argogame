@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v30';
+const VER='v31';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -51,17 +51,17 @@ const PBX=W/2,PBY=22;   // pause button
    tiles = optional ['base','variant1','variant2',...] background tiles: played back to back WITHOUT mirroring; the base tile is most common, variants appear at irregular gaps.
    mob   = enemy type: 'bee' (weaving, stings), 'ant' (marching rows, spit), 'drone' (hover & strafe, lasers), 'binondo' (cars, corporate zombies, snatchers), 'roxas' (shooter cars, kamote riders, budol scammers). New types need new behaviour code.
    deco  = 1 to scatter dragon lamps and lantern strings over the street (Binondo).
-   obs   = two obstacles [image, half-width, half-height].
+   obs   = obstacles [image, half-width, half-height, optional list of x positions where it realistically sits (lane, curb, sidewalk)].
    boss  = img/name/emoji, hp (loop 1), size hw/hh, ai ('bee','ant','drone' attack patterns), shot type, fire interval, move speed.
    After the last stage the game loops back to stage 1: faster and tougher (LOOP_SPAN points between later bosses). */
 const STAGES=[
- {n:'ROXAS BOULEVARD',span:4500,bg:'bg1',tiles:['bg1','bg1b','bg1c'],fb:0,mob:'roxas',obs:[['r_ob1',40,36],['r_ob2',44,44],['r_ob3',33,32],['r_ob4',27,32]],
-  boss:{img:'gm1',name:'GARBAGE MONSTER',emoji:'🗑️',hp:800,hw:74,hh:60,ai:'garbage',shot:'sludge',rate:1.45,spd:.7}},
+ {n:'ROXAS BOULEVARD',span:4500,bg:'bg1',tiles:['bg1','bg1b','bg1c'],fb:0,mob:'roxas',obs:[['r_ob1',40,36,[112,212]],['r_ob2',44,44,[161,206]],['r_ob3',33,32,[112,161,206]],['r_ob4',27,32,[258,298]]],
+  boss:{img:'gm1',name:'GARBAGE MONSTER',emoji:'🗑️',hp:800,hw:74,hh:60,ai:'garbage',shot:'sludge',rate:1.75,spd:.7}},
  {n:'THE DRYLANDS',span:7500,bg:'bg2',fb:1,mob:'ant',obs:[['ob2a',24,40],['ob2b',40,40]],
   boss:{img:'boss2',name:'MECHA ANT QUEEN',emoji:'🐜',hp:1150,hw:66,hh:56,ai:'ant',shot:'spit',rate:1.3,spd:.7}},
  {n:'CONSTRUCTION SITE',span:8000,bg:'bg3',fb:2,mob:'drone',obs:[['ob3a',76,37],['ob3b',19,60]],
   boss:{img:'boss3',name:'BATTLE DRONE',emoji:'🛸',hp:1500,hw:70,hh:60,ai:'drone',shot:'laser',rate:1.2,spd:1.1}},
- {n:'BINONDO',span:9000,bg:'bg4',tiles:['bg4','bg4b'],fb:2,mob:'binondo',deco:1,obs:[['ob4a',36,34],['ob4b',30,36],['ob4c',34,34],['ob4d',21,44]],
+ {n:'BINONDO',span:9000,bg:'bg4',tiles:['bg4','bg4b'],fb:2,mob:'binondo',deco:1,obs:[['ob4a',36,34,[72,288]],['ob4b',30,36,[72,288]],['ob4c',34,34,[72,288]],['ob4d',21,44,[104,256]]],
   boss:{img:'boss4',name:'DRAGON OF BAD LUCK',emoji:'🐉',hp:1800,hw:64,hh:64,ai:'dragon',shot:'badorb',rate:1.25,spd:.8}}];
 const LOOP_SPAN=9000,NST=()=>STAGES.length;
 /* every image a stage names is loaded automatically (backgrounds named bg*.jpg, everything else .png) */
@@ -106,7 +106,7 @@ function resTool(sl){if(P.wp=='drill'||!TOOLS[P.wp]){if(!TBAG.length)TBAG=TK.sli
 function buildSch(){SCH=[];DQ=[];dqT=1;TBAG=[];TPAT.forEach((sl,i)=>SCH.push({f:.04+.86*i/(TPAT.length-1),k:'tool',sl}));const pp=['eye','glove','helm'],pl=pp.concat([0,1].map(()=>pp[Math.random()*3|0])).sort(()=>Math.random()-.5);pl.forEach((k,i)=>SCH.push({f:.11+.8*i/4,k}));SCH.sort((a,b)=>a.f-b.f)}
 const MC={scar:'#bbbbbb',kamote:'#7dff4a',budol:'#f5c542',bee:Y,ant:'#b5532a',drone:'#7fd0ff',car:'#dddddd',corp:'#ffffff',snatch:'#8a5cc7'};
 function kill(e,gain=true,nd){if(e.dead)return;if(gain)score+=e.pts;exFx(e.x,e.y,26);boom(e.x,e.y,MC[e.k],9);e.dead=1;if(gain&&!nd&&Math.random()<.075)drop(e.x,e.y)}
-function hitE(e,v){if(e.k=='scar'&&!e.st){v*=.35;e.af=.12}if(e.inv){if(Math.random()<.25)boom(e.x,e.y+e.hh*.6,'#fff',2);return}if(e.arm&&e.y<H*.5){v*=.3;e.af=.12}e.hp-=v;if(e.hp<=0)kill(e)}
+function hitE(e,v){const strong=TOOLS[P.wp]&&P.cols>=3;if(e.k=='scar'&&!e.st&&strong){v*=.4;e.af=.12}if(e.inv){if(Math.random()<.25)boom(e.x,e.y+e.hh*.6,'#fff',2);return}if(e.arm&&e.y<H*.5&&strong){v*=.3;e.af=.12}e.hp-=v;if(e.hp<=0)kill(e)}
 function bhit(d){if(!boss)return;boss.hp-=d;boss.fl=.08;if(boss.hp<=0)bossDie()}
 const safe=()=>P.t.eye>0||P.t.glove>0||P.t.aid>0||P.boost>0||!!SK;
 function hurt(){if(P.inv>0||safe())return;
@@ -222,9 +222,9 @@ function spawn(d,cnt){const s=ST().mob,n=cnt||2+Math.min(2,(d*.7)|0),vy=70+26*d,
  if(s=='bee'){for(let i=0;i<n;i++)E.push({k:'bee',x,x0:x,y:-20-i*38,hp:hm,r:14,vy,ph,amp:35,t:2+Math.random()*3,pts:15})}
  else if(s=='ant'){for(let i=0;i<n;i++){const o=(i-(n-1)/2);E.push({k:'ant',x:x+o*40,x0:x+o*40,y:-20-Math.abs(o)*28,hp:2*hm,r:15,vy:vy*1.05,ph,amp:14,t:2.5+Math.random()*3,pts:20})}}
  else if(s=='roxas'){const r=Math.random();
-  if(r<.3){const l=[110,161,206][Math.random()*3|0];E.push({k:'scar',x:l,y:-60,hw:20,hh:40,r:20,hp:5*hm,vy:85+16*d,st:0,sd:0,t:1+Math.random(),pts:40})}
+  if(r<.3&&E.filter(q=>q.k=='scar').length<2){const l=[110,161,206][Math.random()*3|0];E.push({k:'scar',x:l,y:-60,hw:20,hh:40,r:20,hp:3*hm,vy:85+16*d,st:0,sd:0,t:1+Math.random(),pts:40})}
   else if(r<.7){for(let i=0;i<Math.min(2,n-1);i++){const x0=70+Math.random()*(W-140);E.push({k:'kamote',arm:1,x:x0,x0,y:-40-i*90,hp:2*hm,r:18,vy:vy*1.3,ph:Math.random()*6,pts:25})}}
-  else{const c=Math.min(2,n);for(let i=0;i<c;i++)E.push({k:'budol',arm:1,x:60+Math.random()*(W-120),y:-30-i*60,hp:3*hm,r:17,vy:vy*.75,t:1.5+Math.random()*2,fr:Math.random()*2,pts:25})}}
+  else{const c=Math.min(2,n);for(let i=0;i<c;i++)E.push({k:'budol',arm:1,x:60+Math.random()*(W-120),y:-30-i*60,hp:2*hm,r:17,vy:vy*.75,t:1.5+Math.random()*2,fr:Math.random()*2,pts:25})}}
  else if(s=='binondo'){const r=Math.random();
   if(r<.45){const l=[126,180,234][Math.random()*3|0],v=1+(Math.random()*4|0),L=[[21,46],[19,40],[19,40],[20,36]][v-1];E.push({k:'car',inv:1,im:'car'+v,x:l,y:-80,hw:L[0],hh:L[1],r:L[0],hp:99,vy:170+30*d,wt:.85,pts:v==1?35:25})}
   else if(r<.72){const sd=Math.random()<.5,c=Math.min(2,n);for(let i=0;i<c;i++)E.push({k:'corp',arm:1,x:sd?46+i*34:W-46-i*34,y:-20-i*42,hp:3*hm,r:16,vy:vy*.9,t:1.8+Math.random()*2.5,pts:20,fr:Math.random()*4})}
@@ -232,7 +232,8 @@ function spawn(d,cnt){const s=ST().mob,n=cnt||2+Math.min(2,(d*.7)|0),vy=70+26*d,
  else{for(let i=0;i<n;i++)E.push({k:'drone',x:Math.max(30,Math.min(W-30,x+(i-(n-1)/2)*70)),y:-20-i*30,hp:2*hm,r:14,vy:vy*1.4,ty:80+Math.random()*130,dir:Math.random()<.5?-1:1,t:1.5+Math.random()*1.5,hv:0,pts:25})}
 }
 function spawnOb(d){const ob=ST().obs,n=d>1.6&&Math.random()<.5?2:1,xs=[];
- for(let i=0;i<n;i++){const D=ob[Math.random()*ob.length|0];let x,t=0;do{x=D[1]+10+Math.random()*(W-2*D[1]-20);t++}while(t<14&&xs.some(q=>Math.abs(q[0]-x)<q[1]+D[1]+125));
+ for(let i=0;i<n;i++){const D=ob[Math.random()*ob.length|0];let x,t=0;do{x=D[3]?D[3][Math.random()*D[3].length|0]+(Math.random()-.5)*8:D[1]+10+Math.random()*(W-2*D[1]-20);t++}while(t<14&&(xs.some(q=>Math.abs(q[0]-x)<q[1]+D[1]+(D[3]?20:125))||O.some(o=>o.y<70&&Math.abs(o.x-x)<o.hw+D[1]+10)));
+  if(t>=14)break;
   if(t>=14&&i)break;xs.push([x,D[1]]);O.push({im:D[0],x,y:-80-i*80,hw:D[1],hh:D[2],vy:80+14*d})}}
 function mkBoss(){const c=ST().boss,L=lp(),mx=c.hp*(1+.4*L);
  if(P.skill)setTimeout(()=>toast('USE YOUR POWER TOOL SKILL!'),2500);
@@ -270,9 +271,9 @@ function updBoss(dt){const b=boss,c=b.c,s=c.ai,L=lp();b.t+=dt;if(b.fl>0)b.fl-=dt
   if(ph==3&&v%2)ring(10,135)}
  else if(s=='garbage'){ /* GARBAGE MONSTER: spews sludge + bottles, warned ground-slam shockwaves, trash rings */
   const p=v%(ph==1?3:4);
-  if(p==0){b.pose=2;b.pT=.7;fan(ph==1?5:7,170,.22,'sludge');for(let i=0;i<(ph==1?2:4);i++)shotA(b.x,b.y+30,'bottle',150*spd,aimA(b.x,b.y)+(Math.random()-.5)*1.2)}
-  else if(p==1)slam(b,ph);else if(p==2)ring(ph==1?12:16,135,'bottle');else{b.pose=2;b.pT=2.1;stream(3,2,.1,.3,160,'sludge')}
-  if(ph==3&&v%2==0)fan(3,220,.12,'sludge');
+  if(p==0){b.pose=2;b.pT=.7;fan(ph==1?3:5,165,.26,'sludge');for(let i=0;i<(ph==1?1:2);i++)shotA(b.x,b.y+30,'bottle',150*spd,aimA(b.x,b.y)+(Math.random()-.5)*1.2)}
+  else if(p==1)slam(b,ph);else if(p==2)ring(ph==1?8:11,130,'bottle');else{b.pose=2;b.pT=2.1;stream(2,1.8,.14,.3,150,'sludge')}
+  if(ph==3&&v%3==0)fan(3,210,.14,'sludge');
   if(v%5==4)spawn(dif(),2)}
  else if(s=='dragon'){ /* DRAGON OF BAD LUCK: bad-luck orb fans, cursed coin rings, spirals, and the warned TAIL WHIP */
   const p=v%(ph==1?3:4);
@@ -307,7 +308,7 @@ function upd(dt){if(hs>0){hs-=dt;updFx(dt*.2);return}tm+=dt;stT+=dt;const d=dif(
    for(const e of E)if(!e.dead&&e.y<P.y-10&&Math.abs(e.x-b.x)<e.r+b.w/2+4)hitE(e,dd*3)
    if(boss&&boss.y>0&&Math.abs(b.x-boss.x)<boss.hw*.9+b.w/2)bhit(dd*1.5)}}
  else if(P.cd<=0){
-  if(w=='drill'){P.cd=.2;B.push({x:P.x+mz,y:P.y-38,vx:0,vy:-620,dmg:1,r:4,k:'b'})}
+  if(w=='drill'){P.cd=.2;B.push({x:P.x+mz,y:P.y-38,vx:0,vy:-620,dmg:1.6,r:4,k:'b'})}
   else if(w=='nail'){P.cd=.13;const sp=70*Math.PI/180*(n-1)/6;for(let i=0;i<n;i++){const a=n>1?-sp/2+sp*i/(n-1):0;B.push({x:P.x+mz+Math.sin(a)*8,y:P.y-38,vx:Math.sin(a)*780,vy:-Math.cos(a)*780,dmg:dm,r:3,k:'n'})}}
   else{P.cd=Math.max(.25,.55-.04*(n-1)-.025*P.dl);const sp=70*Math.PI/180*(n-1)/6;for(let i=0;i<n;i++){const a=n>1?-sp/2+sp*i/(n-1):0;B.push({x:P.x+mz+Math.sin(a)*10,y:P.y-38,vx:Math.sin(a)*470,vy:-Math.cos(a)*470,dmg:3,r:12,k:'d',h:new Map(),a:0,rt:0,life:4})}}}
  /* progression */
@@ -334,10 +335,10 @@ function upd(dt){if(hs>0){hs-=dt;updFx(dt*.2);return}tm+=dt;stT+=dt;const d=dif(
   else if(e.k=='ant'){e.y+=e.vy*wd;e.ph+=wd*2.2;e.x=e.x0+Math.sin(e.ph)*e.amp;e.t-=wd;
    if(e.t<0&&e.y>10&&e.y<H*.55){e.t=(2.6+Math.random()*2)/(.6+d*.4);const a=aimA(e.x,e.y);shotA(e.x,e.y+10,'spit',150+25*d,a);if(d>1.6)shotA(e.x,e.y+10,'spit',150+25*d,a+.35)}}
  else if(e.k=='scar'){e.y+=e.vy*wd;e.t-=wd;   /* gunmen hide (armoured), lean out, then fire from both windows */
-   if(e.t<=0){if(e.st==0&&e.y>10&&e.y<H*.6){e.st=1;e.t=.45;e.sd=Math.random()<.5}else if(e.st==1){e.st=2;e.t=.3;for(const dx of[-26,26])shotA(e.x+dx,e.y-4,'rbolt',210+25*d,aimA(e.x+dx,e.y))}else{e.st=0;e.t=(1.6+Math.random()*1.4)/(.6+d*.4)}}}
+   if(e.t<=0){if(e.st==0&&e.y>10&&e.y<H*.6){e.st=1;e.t=.45;e.sd=Math.random()<.5}else if(e.st==1){e.st=2;e.t=.3;const dx=e.sd?-26:26;shotA(e.x+dx,e.y-4,'rbolt',185+20*d,aimA(e.x+dx,e.y))}else{e.st=0;e.t=(2.8+Math.random()*1.6)/(.6+d*.3)}}}
   else if(e.k=='kamote'){e.y+=e.vy*wd;e.ph+=wd*2.6;e.x=e.x0+Math.sin(e.ph)*70;if(e.x0<80)e.x0=80;if(e.x0>W-80)e.x0=W-80}   /* weaves through traffic */
   else if(e.k=='budol'){e.y+=e.vy*wd;e.x+=Math.sign(P.x-e.x)*Math.min(Math.abs(P.x-e.x),30*wd);e.fr+=wd*3;e.t-=wd;   /* sweet-talks closer, tosses fake cash */
-   if(e.t<0&&e.y>20&&e.y<H*.6){e.t=(2.6+Math.random()*2)/(.6+d*.4);const a=aimA(e.x,e.y);for(const da of[-.25,0,.25])shotA(e.x,e.y+10,'cash',140+20*d,a+da)}}
+   if(e.t<0&&e.y>20&&e.y<H*.6){e.t=(3.6+Math.random()*2)/(.6+d*.3);shotA(e.x,e.y+10,'cash',135+15*d,aimA(e.x,e.y))}}
   else if(e.k=='car'){if(e.wt>0)e.wt-=wd;else e.y+=e.vy*wd}   /* races straight down its lane after a warning */
   else if(e.k=='corp'){e.y+=e.vy*wd;e.x+=Math.sign(P.x-e.x)*Math.min(Math.abs(P.x-e.x),22*wd);e.fr+=wd*6;e.t-=wd;   /* shuffles toward you, throws coffee */
    if(e.t<0&&e.y>20&&e.y<H*.55){e.t=(3+Math.random()*2)/(.6+d*.4);shotA(e.x,e.y+10,'coffee',150+20*d,aimA(e.x,e.y))}}
@@ -428,7 +429,7 @@ if(e.k=='ant'){if(ok('antw1')){spr('antw'+(1+(((tm*10+e.x*.1)|0)%4)),e.x,e.y,54)
 const OBC={ob1a:'#8a5a2b',ob1b:'#c9a36b',ob2a:'#3f8f3a',ob2b:'#a89878',ob3a:'#8d939c',ob3b:'#8d939c'};
 function dob(o){if(ok(o.im)){const near=st=='play'&&o.y<P.y&&P.y-o.y<220&&Math.abs(o.x-P.x)<o.hw+30;
   g.fillStyle='rgba(0,0,0,.38)';g.beginPath();g.ellipse(o.x+5,o.y+o.hh*.75,o.hw*1.05,o.hh*.3,0,0,7);g.fill();
-  g.save();g.shadowColor=near?`rgba(255,40,40,${.6+.4*Math.sin(tm*14)})`:'rgba(255,255,255,.95)';g.shadowBlur=near?16:5;spr(o.im,o.x,o.y,o.hh*2,0,o.hw*2.05);g.restore();return}
+  g.save();if(near){g.shadowColor=`rgba(255,40,40,${.55+.35*Math.sin(tm*14)})`;g.shadowBlur=14}spr(o.im,o.x,o.y,o.hh*2,0,o.hw*2.05);g.restore();return}
  g.save();g.translate(o.x,o.y);g.fillStyle=OBC[o.im];g.strokeStyle='#000';g.lineWidth=2;
  if(o.im=='ob1a'){for(let i=0;i<3;i++){g.fillStyle=i%2?'#7a4c22':'#8a5a2b';g.fillRect(-o.hw,-o.hh+i*(o.hh*2/3),o.hw*2,o.hh*2/3);g.strokeRect(-o.hw,-o.hh+i*(o.hh*2/3),o.hw*2,o.hh*2/3)}}
  else if(o.im=='ob1b'){g.lineWidth=7;g.strokeStyle='#c9a36b';g.strokeRect(-o.hw,-o.hh+10,o.hw*2,o.hh*2-10);g.beginPath();g.moveTo(-o.hw-6,-o.hh+10);g.lineTo(0,-o.hh-6);g.lineTo(o.hw+6,-o.hh+10);g.moveTo(-o.hw,o.hh);g.lineTo(o.hw,-o.hh+10);g.stroke()}
