@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v28';
+const VER='v29';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -48,7 +48,7 @@ const PBX=W/2,PBY=22;   // pause button
    HOW TO ADD A STAGE: copy one entry below and change it.
    span  = points needed (from the previous boss) before this stage's boss appears.
    bg    = background image in assets (jpg).  fb = fallback look if the image is missing (0 forest, 1 desert, 2 site).
-   tiles = optional ['plain','landmark'] background tiles: plays them back to back WITHOUT mirroring, the landmark tile appearing at irregular intervals.
+   tiles = optional ['base','variant1','variant2',...] background tiles: played back to back WITHOUT mirroring; the base tile is most common, variants appear at irregular gaps.
    mob   = enemy type: 'bee' (weaving, stings), 'ant' (marching rows, spit), 'drone' (hover & strafe, lasers), 'binondo' (cars, corporate zombies, snatchers). New types need new behaviour code.
    deco  = 1 to scatter dragon lamps and lantern strings over the street (Binondo).
    obs   = two obstacles [image, half-width, half-height].
@@ -368,9 +368,9 @@ function bgFb(s){const c=[['#2c6a30','#3f8a3d'],['#dcb872','#c99a52'],['#4a4d55'
   if(s==0){g.fillStyle='#1d4a22';g.beginPath();g.arc(d.x,y,d.r,0,7);g.fill();g.fillStyle='#2f7a35';g.beginPath();g.arc(d.x-3,y-3,d.r*.7,0,7);g.fill()}
   else if(s==1){g.fillStyle=d.c<.5?'#3f8f3a':'#9b8460';if(d.c<.5){g.fillRect(d.x-4,y-d.r,8,d.r*2);g.fillRect(d.x-12,y-4,8,4);g.fillRect(d.x+4,y-8,8,4)}else{g.beginPath();g.arc(d.x,y,d.r,0,7);g.fill()}}
   else{g.fillStyle='#8d939c';g.fillRect(d.x-d.r,y-5,d.r*2,10);g.fillStyle=Y;g.fillRect(d.x-d.r,y-5,6,10);g.fillRect(d.x+d.r-6,y-5,6,10)}}}
-const tileAt=(T,i)=>{const h=v=>(Math.imul(v,2654435761)>>>0)%3;return h(i)==0&&h(i-1)!=0?T[1]:T[0]};
+const tileAt=(T,i)=>{const h=v=>(Math.imul(v,2654435761)>>>0)%100,L=T.length-1;if(L<1)return T[0];const p=L>1?35:20;return h(i)<p&&h(i-1)>=p?T[1+(Math.imul(i,40503)>>>7)%L]:T[0]};
 function bgImg(s,a){if(a<=0)return;g.globalAlpha=a;const T=STAGES[s].tiles;
- if(T&&ok(T[0])&&ok(T[1])){const i0=IM[T[0]],dh=Math.max(W*i0.naturalHeight/i0.naturalWidth,H),dw=dh*i0.naturalWidth/i0.naturalHeight,pos=bgS%dh,n=Math.floor(bgS/dh);
+ if(T&&T.every(ok)){const i0=IM[T[0]],dh=Math.max(W*i0.naturalHeight/i0.naturalWidth,H),dw=dh*i0.naturalWidth/i0.naturalHeight,pos=bgS%dh,n=Math.floor(bgS/dh);
   for(let j=-1;j<=0;j++)g.drawImage(IM[tileAt(T,n-j)],(W-dw)/2,pos+j*dh,dw,dh);g.fillStyle='rgba(0,0,0,.15)';g.fillRect(0,0,W,H);g.globalAlpha=1;return}
  const k=STAGES[s].bg;
  if(ok(k)){const im=IM[k];let dh=Math.max(W*im.naturalHeight/im.naturalWidth,H),dw=dh*im.naturalWidth/im.naturalHeight;const pos=bgS%dh,n=Math.floor(bgS/dh);
@@ -405,7 +405,9 @@ function de(e){
  if(e.k=='snatch'){const f='snatch'+((e.dash?e.dvx:e.dir)<0?1:2);if(ok(f))spr(f,e.x,e.y,56);else em('🛵',e.x,e.y,30);return}
 if(e.k=='ant'){if(ok('antw1')){spr('antw'+(1+(((tm*10+e.x*.1)|0)%4)),e.x,e.y,54);return}if(ok('ant1')){spr('ant1',e.x,e.y,44,Math.sin(tm*14+e.x)*.12);return}}const m=MI[e.k],f=((tm*10+e.x)|0)%2?m[0]:m[1];if(ok(f))spr(f,e.x,e.y,m[3]);else em(m[2],e.x,e.y,m[3]*.65)}
 const OBC={ob1a:'#8a5a2b',ob1b:'#c9a36b',ob2a:'#3f8f3a',ob2b:'#a89878',ob3a:'#8d939c',ob3b:'#8d939c'};
-function dob(o){if(ok(o.im)){spr(o.im,o.x,o.y,o.hh*2,0,o.hw*2.05);return}
+function dob(o){if(ok(o.im)){const near=st=='play'&&o.y<P.y&&P.y-o.y<220&&Math.abs(o.x-P.x)<o.hw+30;
+  g.fillStyle='rgba(0,0,0,.38)';g.beginPath();g.ellipse(o.x+5,o.y+o.hh*.75,o.hw*1.05,o.hh*.3,0,0,7);g.fill();
+  g.save();g.shadowColor=near?`rgba(255,40,40,${.6+.4*Math.sin(tm*14)})`:'rgba(255,255,255,.95)';g.shadowBlur=near?16:5;spr(o.im,o.x,o.y,o.hh*2,0,o.hw*2.05);g.restore();return}
  g.save();g.translate(o.x,o.y);g.fillStyle=OBC[o.im];g.strokeStyle='#000';g.lineWidth=2;
  if(o.im=='ob1a'){for(let i=0;i<3;i++){g.fillStyle=i%2?'#7a4c22':'#8a5a2b';g.fillRect(-o.hw,-o.hh+i*(o.hh*2/3),o.hw*2,o.hh*2/3);g.strokeRect(-o.hw,-o.hh+i*(o.hh*2/3),o.hw*2,o.hh*2/3)}}
  else if(o.im=='ob1b'){g.lineWidth=7;g.strokeStyle='#c9a36b';g.strokeRect(-o.hw,-o.hh+10,o.hw*2,o.hh*2-10);g.beginPath();g.moveTo(-o.hw-6,-o.hh+10);g.lineTo(0,-o.hh-6);g.lineTo(o.hw+6,-o.hh+10);g.moveTo(-o.hw,o.hh);g.lineTo(o.hw,-o.hh+10);g.stroke()}
