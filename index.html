@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v31';
+const VER='v32';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -55,7 +55,7 @@ const PBX=W/2,PBY=22;   // pause button
    boss  = img/name/emoji, hp (loop 1), size hw/hh, ai ('bee','ant','drone' attack patterns), shot type, fire interval, move speed.
    After the last stage the game loops back to stage 1: faster and tougher (LOOP_SPAN points between later bosses). */
 const STAGES=[
- {n:'ROXAS BOULEVARD',span:4500,bg:'bg1',tiles:['bg1','bg1b','bg1c'],fb:0,mob:'roxas',obs:[['r_ob1',40,36,[112,212]],['r_ob2',44,44,[161,206]],['r_ob3',33,32,[112,161,206]],['r_ob4',27,32,[258,298]]],
+ {n:'ROXAS BOULEVARD',span:4500,bg:'bg1',tiles:['bg1','bg1b','bg1c','bg1d'],fb:0,mob:'roxas',obs:[['r_ob1',40,36,[125,169]],['r_ob2',44,44,[125,169]],['r_ob3',33,32,[125,169]],['r_ob4',27,32,[92,248]]],
   boss:{img:'gm1',name:'GARBAGE MONSTER',emoji:'🗑️',hp:800,hw:74,hh:60,ai:'garbage',shot:'sludge',rate:1.75,spd:.7}},
  {n:'THE DRYLANDS',span:7500,bg:'bg2',fb:1,mob:'ant',obs:[['ob2a',24,40],['ob2b',40,40]],
   boss:{img:'boss2',name:'MECHA ANT QUEEN',emoji:'🐜',hp:1150,hw:66,hh:56,ai:'ant',shot:'spit',rate:1.3,spd:.7}},
@@ -222,7 +222,7 @@ function spawn(d,cnt){const s=ST().mob,n=cnt||2+Math.min(2,(d*.7)|0),vy=70+26*d,
  if(s=='bee'){for(let i=0;i<n;i++)E.push({k:'bee',x,x0:x,y:-20-i*38,hp:hm,r:14,vy,ph,amp:35,t:2+Math.random()*3,pts:15})}
  else if(s=='ant'){for(let i=0;i<n;i++){const o=(i-(n-1)/2);E.push({k:'ant',x:x+o*40,x0:x+o*40,y:-20-Math.abs(o)*28,hp:2*hm,r:15,vy:vy*1.05,ph,amp:14,t:2.5+Math.random()*3,pts:20})}}
  else if(s=='roxas'){const r=Math.random();
-  if(r<.3&&E.filter(q=>q.k=='scar').length<2){const l=[110,161,206][Math.random()*3|0];E.push({k:'scar',x:l,y:-60,hw:20,hh:40,r:20,hp:3*hm,vy:85+16*d,st:0,sd:0,t:1+Math.random(),pts:40})}
+  if(r<.3&&E.filter(q=>q.k=='scar').length<2){const l=[125,169][Math.random()*2|0];E.push({k:'scar',x:l,y:-60,hw:20,hh:40,r:20,hp:3*hm,vy:85+16*d,st:0,sd:0,t:1+Math.random(),pts:40})}
   else if(r<.7){for(let i=0;i<Math.min(2,n-1);i++){const x0=70+Math.random()*(W-140);E.push({k:'kamote',arm:1,x:x0,x0,y:-40-i*90,hp:2*hm,r:18,vy:vy*1.3,ph:Math.random()*6,pts:25})}}
   else{const c=Math.min(2,n);for(let i=0;i<c;i++)E.push({k:'budol',arm:1,x:60+Math.random()*(W-120),y:-30-i*60,hp:2*hm,r:17,vy:vy*.75,t:1.5+Math.random()*2,fr:Math.random()*2,pts:25})}}
  else if(s=='binondo'){const r=Math.random();
