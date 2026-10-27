@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v33';
+const VER='v34';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -61,7 +61,7 @@ const STAGES=[
   boss:{img:'boss2',name:'MECHA ANT QUEEN',emoji:'🐜',hp:1150,hw:66,hh:56,ai:'ant',shot:'spit',rate:1.3,spd:.7}},
  {n:'CONSTRUCTION SITE',span:8000,bg:'bg3',fb:2,mob:'drone',obs:[['ob3a',76,37],['ob3b',19,60]],
   boss:{img:'boss3',name:'BATTLE DRONE',emoji:'🛸',hp:1500,hw:70,hh:60,ai:'drone',shot:'laser',rate:1.2,spd:1.1}},
- {n:'BINONDO',span:9000,bg:'bg4',tiles:['bg4','bg4b'],fb:2,mob:'binondo',deco:1,obs:[['ob4a',36,34,[72,288]],['ob4b',30,36,[72,288]],['ob4c',34,34,[72,288]],['ob4d',21,44,[104,256]]],
+ {n:'QUINTIN PAREDES',span:9000,bg:'bg4',tiles:['bg4','bg4b'],fb:2,mob:'binondo',deco:1,obs:[['ob4a',36,34,[72,288]],['ob4b',30,36,[72,288]],['ob4c',34,34,[72,288]],['ob4d',21,44,[104,256]]],
   boss:{img:'boss4',name:'DRAGON OF BAD LUCK',emoji:'🐉',hp:1800,hw:64,hh:64,ai:'dragon',shot:'badorb',rate:1.25,spd:.8}}];
 const LOOP_SPAN=9000,NST=()=>STAGES.length;
 /* every image a stage names is loaded automatically (backgrounds named bg*.jpg, everything else .png) */
@@ -668,6 +668,7 @@ function draw(){if(st=='play'){if(shake>0)g.translate((Math.random()-.5)*12*shak
   g.globalAlpha=on?1:.45;if(ok('shock'))spr('shock',BX,BY,62,0,62);else{g.fillStyle=Y;g.beginPath();g.moveTo(BX+3,BY-15);g.lineTo(BX-9,BY+2);g.lineTo(BX-1,BY+2);g.lineTo(BX-4,BY+15);g.lineTo(BX+9,BY-3);g.lineTo(BX+1,BY-3);g.closePath();g.fill()}g.globalAlpha=1;
   g.strokeStyle=Y;g.lineWidth=4;g.beginPath();g.arc(BX,BY,31,-Math.PI/2,-Math.PI/2+Math.PI*2*P.pc/5);g.stroke();
   if(on)tt('x'+P.bombs,BX+20,BY+20,13,Y,'center',3);tt('SHOCK '+P.pc+'/5',BX-4,BY+40,10,'#ddd','center',3)}
+ }
  if(st=='play')drawSkBtns();
  if(toastT>0&&st=='play'){g.globalAlpha=Math.min(1,toastT*2);tt(toastM,W/2,H-120,18,Y,'center',4);g.globalAlpha=1}
  tt(P.wp=='drill'?'DRILL BOLTS':TOOLS[P.wp][0]+' x'+P.cols+dlTxt(),10,H-14,14,'#fff','left',3);
@@ -676,7 +677,6 @@ function draw(){if(st=='play'){if(shake>0)g.translate((Math.random()-.5)*12*shak
   g.fillStyle='rgba(0,0,0,.55)';g.beginPath();g.arc(hx,HY,15,0,7);g.fill();g.globalAlpha=bl?.4:1;if(ok('pu_'+k))spr('pu_'+k,hx,HY,24,0,24);else em(PPE[k],hx,HY,16);g.globalAlpha=1;
   g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=3;g.beginPath();g.arc(hx,HY,15,0,7);g.stroke();g.strokeStyle=`rgb(${c})`;g.beginPath();g.arc(hx,HY,15,-Math.PI/2,-Math.PI/2+Math.PI*2*f);g.stroke();
   tt(Math.ceil(P.t[k])+'s',hx,HY+23,10,`rgb(${c})`,'center',2);hx+=38}}
- }
  if(bannerT>0&&st=='play'){g.globalAlpha=Math.min(1,bannerT);tt('STAGE '+(bd+1),W/2,230,42,Y,'center',6);tt(ST().n,W/2,272,20,'#fff','center',4);g.globalAlpha=1}
  if(warnT>0&&((tm*5)|0)%2){tt('⚠ WARNING ⚠',W/2,250,38,'#ff3b30','center',6);tt(ST().boss.name+' APPROACHING',W/2,290,16,'#fff','center',4)}
  if(st=='over'){g.fillStyle='rgba(0,0,0,.6)';g.fillRect(0,0,W,H);tt('GAME OVER',W/2,220,44,R,'center',6);tt('SCORE '+score,W/2,285,26,'#fff','center',4);
@@ -687,23 +687,38 @@ function draw(){if(st=='play'){if(shake>0)g.translate((Math.random()-.5)*12*shak
   btn(90,290,180,48,'▶  RESUME','red',22);btn(90,350,180,42,'⌂  MAIN MENU','dark',17);tt('Main Menu ends this run and saves your score',W/2,404,10,'#bbb','center',0)}}
 /* ===== SCREEN SAVER: after 25s idle on the title screen, tours every stage and replays a Power Tool Skill on each boss ===== */
 let DEMO=0,idleT=0,DS=null;const IDLE_SEC=25;
-function saverStart(i){const k=SKO[i%3];init();DEMO=1;bd=i%NST();prevT=bd?bAt(bd-1):0;score=prevT;buildSch();stT=0;bannerT=3.2;bgFade=0;
- for(let n=0;n<3;n++)toolUp(k,0,0,1);T=[];DS={i,k,t:0,used:0,end:0}}
+const DPPE=[['eye','GOGGLES = SHIELD + TOOL BOOST'],['helm','HELMET = BOUNCES SHOTS BACK'],['glove','GLOVES = SHIELD + POWER-UP MAGNET'],['aid','FIRST AID = +1 LIFE']];
+function saverStart(i){const k=SKO[i%3];init();DEMO=1;bd=i%NST();prevT=bd?bAt(bd-1):0;score=prevT;buildSch();SCH=[];DQ=[];boostDone=true;adDone=2;stT=0;bannerT=3.2;bgFade=0;
+ T=[];DS={i,k,t:0,n:0,dropT:3,ppe:0,used:0,end:0,tap:0,cap:'',capT:0}}
+function cap(t,d){DS.cap=t;DS.capT=d||2.2}
 function exitSaver(){DEMO=0;DS=null;idleT=0;init();st='title';P=mkP();boss=null;score=0;bd=0;bannerT=0;tch=false}
-function saverTick(dt){const d=DS;d.t+=dt;
- const tg=boss&&boss.in?boss:E.filter(e=>e.y>20&&!e.inv).sort((a,b)=>b.y-a.y)[0];tx=tg?Math.max(30,Math.min(W-30,tg.x+Math.sin(tm*1.7)*24)):W/2+Math.sin(tm*.8)*90;ty=boss?520:500+Math.sin(tm)*30;
- U=U.filter(u=>!TOOLS[u.k]||u.k==P.wp);
- if(!boss&&warnT<=0&&d.t>8){score=bAt(bd);SCH=[];DQ=[]}
- if(boss&&boss.in&&!d.used&&!SK&&boss.t>1.2){P.skill=d.k;useSkill(d.k);d.used=1}
+function saverTick(dt){const d=DS;d.t+=dt;if(d.capT>0)d.capT-=dt;
+ const it=U.filter(u=>u.y>-10&&u.y<P.y).sort((a,b)=>b.y-a.y)[0];
+ const tg=boss&&boss.in?boss:E.filter(e=>e.y>20&&!e.inv).sort((a,b)=>b.y-a.y)[0];
+ if(it){tx=it.x;ty=Math.max(170,Math.min(540,it.y+30))}else{tx=tg?Math.max(30,Math.min(W-30,tg.x+Math.sin(tm*1.7)*24)):W/2+Math.sin(tm*.8)*90;ty=boss?520:500+Math.sin(tm)*30}
+ U=U.filter(u=>!TOOLS[u.k]||u.k==d.k);
+ const TN=TOOLS[d.k][0];
+ if(!boss&&warnT<=0&&!U.some(u=>u.k==d.k||PPE[u.k])){d.dropT-=dt;if(d.dropT<=0){
+   if(d.n<7){d.n++;U.push({k:d.k,x:Math.max(60,Math.min(W-60,P.x+(Math.random()-.5)*80)),y:Math.max(-20,P.y-190)});d.dropT=.9;
+    cap(d.n==1?'GRAB A POWER TOOL = NEW WEAPON: '+TN:d.n<7?'SAME TOOL AGAIN = MORE FIREPOWER  x'+d.n:'7th '+TN+' = MAX POWER + SKILL CHARGED!',2.4)}
+   else if(!d.ppe){d.ppe=1;const q=DPPE[d.i%4];U.push({k:q[0],x:Math.max(60,Math.min(W-60,P.x)),y:Math.max(-20,P.y-190)});cap(q[1],3);d.dropT=2.6}
+   else{score=bAt(bd);cap('FILL THE BAR TO FACE THE BOSS!',2.4);d.dropT=99}}}
+ if(boss&&boss.in&&!d.used&&!SK&&boss.t>1){if(!d.tap){d.tap=1.6;if(!P.skill)P.skill=d.k;cap('BOSS FIGHT: TAP THE SKILL BUTTON!',2.2)}d.tap-=dt;if(d.tap<=0){useSkill(d.k);d.used=1;d.tapFx=.4}}
+ if(d.tapFx>0)d.tapFx-=dt;
  if(d.used&&!SK){d.end+=dt;if(d.end>1.6)saverStart(d.i+1)}
- if(d.t>40)saverStart(d.i+1)}
-function saverDraw(){const by=H-70,a=.55+.45*Math.sin(tm*5);
+ if(d.t>60)saverStart(d.i+1)}
+function saverDraw(){const by=H-74,a=.55+.45*Math.sin(tm*5),d=DS;
  g.fillStyle='rgba(0,0,0,.5)';g.fillRect(0,0,W,58);logo(W/2,30,150,10);
  if(SK){g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,64,W,26);tt('★ POWER TOOL SKILL HIGHLIGHT ★',W/2,77,13,Y,'center',2)}
- else if(!bannerT||bannerT<=0){tt('STAGE '+(bd+1)+'  ·  '+ST().n,W/2,74,13,'#fff','center',3)}
- const gr=g.createLinearGradient(0,by-40,0,H);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.75)');g.fillStyle=gr;g.fillRect(0,by-40,W,H-by+40);
+ else if(!(bannerT>0))tt('STAGE '+(bd+1)+'  ·  '+ST().n,W/2,74,13,'#fff','center',3);
+ if(d&&d.capT>0&&!SK&&!(bannerT>0)){const al=Math.min(1,d.capT*3,(2.4-d.capT)*6+.3);g.globalAlpha=Math.max(0,al);g.font='600 14px '+FNT;const w=Math.min(W-20,g.measureText(d.cap).width+28);
+  g.fillStyle='rgba(10,10,14,.82)';rr(W/2-w/2,318,w,34,17);g.fill();g.strokeStyle=Y;g.lineWidth=2;g.stroke();tt(d.cap,W/2,336,14,'#fff','center',0,W-36);g.globalAlpha=1}
+ if(d&&d.tap>0&&!SK&&skBtns().length){const b=skBtns()[0],q=(1.6-d.tap)%0.8/0.8,fy=b.y-34+Math.sin(q*Math.PI)*18;
+  g.save();g.globalCompositeOperation='lighter';glow('helm',b.x,b.y,40+q*20,.6*(1-q));g.restore();g.globalAlpha=1;g.strokeStyle=`rgba(255,210,31,${1-q})`;g.lineWidth=3;g.beginPath();g.arc(b.x,b.y,28+q*22,0,7);g.stroke();
+  em('👆',b.x+8,fy+28,30);tt('TAP!',b.x+44,b.y-30,14,Y,'center',3)}
+ const gr=g.createLinearGradient(0,by-40,0,H);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.6)');g.fillStyle=gr;g.fillRect(0,by-40,W,H-by+40);
  if(((tm*2.2)|0)%2==0||a>.6){g.save();g.shadowColor=Y;g.shadowBlur=18;tt('TAP TO PLAY',W/2,by,30,Y,'center',4);g.restore()}
- tt('BASTA ARGO, POWER!',W/2,by+32,12,'#fff','center',2)}
+ tt('BASTA ARGO, POWER!',W/2,by+28,11,'#fff','center',2)}
 let last=0;
 function loop(n){const dt=Math.min(.05,(n-last)/1000||0);last=n;
  if(!DEMO&&st=='title'&&!howInst&&document.activeElement!==nmEl){idleT+=dt;if(idleT>IDLE_SEC)saverStart(0)}else if(!DEMO)idleT=0;
