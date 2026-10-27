@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v34';
+const VER='v35';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -100,13 +100,16 @@ const obHit=(o,x,y,r)=>Math.abs(x-o.x)<o.hw*(o.im=='ob3a'?.8:.85)+r&&Math.abs(y-
 function boom(x,y,c,n){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=40+Math.random()*160;F.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:.5+Math.random()*.4,c})}}
 function drop(x,y){}   /* no random drops: every power-up is scheduled */
 let SCH=[],DQ=[],dqT=0,TBAG=[];
+/* power-ups ride on a glowing enemy near the top of the screen; destroy it to drop the item */
+function carrier(){const c=E.filter(e=>!e.dead&&!e.cr&&!e.inv&&e.y>-30&&e.y<H*.42).sort((a,b)=>a.y-b.y);return c[0]}
 /* tool drop pattern per stage: m = your current tool (9), a/b = the other two tools (3 each). Before you own a tool, drops rotate all three so you can choose. */
 const TPAT=['m','m','a','m','b','m','m','a','m','b','m','m','a','m','b'],TK=['heat','nail','disc'];
 function resTool(sl){if(P.wp=='drill'||!TOOLS[P.wp]){if(!TBAG.length)TBAG=TK.slice().sort(()=>Math.random()-.5);return TBAG.pop()}
  if(sl=='m')return P.wp;const o=TK.filter(k=>k!=P.wp);return sl=='a'?o[0]:o[1]}
 function buildSch(){SCH=[];DQ=[];dqT=1;TBAG=[];TPAT.forEach((sl,i)=>SCH.push({f:.04+.86*i/(TPAT.length-1),k:'tool',sl}));const pp=['eye','glove','helm'],pl=pp.concat([0,1].map(()=>pp[Math.random()*3|0])).sort(()=>Math.random()-.5);pl.forEach((k,i)=>SCH.push({f:.11+.8*i/4,k}));SCH.sort((a,b)=>a.f-b.f)}
 const MC={scar:'#bbbbbb',kamote:'#7dff4a',budol:'#f5c542',bee:Y,ant:'#b5532a',drone:'#7fd0ff',car:'#dddddd',corp:'#ffffff',snatch:'#8a5cc7'};
-function kill(e,gain=true,nd){if(e.dead)return;if(gain)score+=e.pts;exFx(e.x,e.y,26);boom(e.x,e.y,MC[e.k],9);e.dead=1;if(gain&&!nd&&Math.random()<.075)drop(e.x,e.y)}
+function kill(e,gain=true,nd){if(e.dead)return;if(gain)score+=e.pts;exFx(e.x,e.y,26);boom(e.x,e.y,MC[e.k],9);e.dead=1;if(e.cr){const q=e.cr;e.cr=null;q.x=Math.max(40,Math.min(W-40,e.x));q.y=Math.max(20,e.y);U.push(q);burst(q.x,q.y,carC(q),20)}}
+const carC=q=>q.lg?'fire':TOOLS[q.k]?'helm':(GL[q.k]?q.k:'white');
 function hitE(e,v){const strong=TOOLS[P.wp]&&P.cols>=3;if(e.k=='scar'&&!e.st&&strong){v*=.4;e.af=.12}if(e.inv){if(Math.random()<.25)boom(e.x,e.y+e.hh*.6,'#fff',2);return}if(e.arm&&e.y<H*.5&&strong){v*=.3;e.af=.12}e.hp-=v;if(e.hp<=0)kill(e)}
 function bhit(d){if(!boss)return;boss.hp-=d;boss.fl=.08;if(boss.hp<=0)bossDie()}
 const safe=()=>P.t.eye>0||P.t.glove>0||P.t.aid>0||P.boost>0||!!SK;
@@ -246,7 +249,7 @@ function updBoss(dt){const b=boss,c=b.c,s=c.ai,L=lp();b.t+=dt;if(b.fl>0)b.fl-=dt
  if(b.y<128&&!b.in){b.y+=80*dt;return}b.in=1;
  const ph=b.hp<b.mx*.3?3:b.hp<b.mx*.65?2:1,spd=1+.12*L+(ph-1)*.07;
  if(b.pT>0){b.pT-=dt;if(b.pT<=0)b.pose=0}if(s=='garbage')b.k='gm'+(b.pose||(ph==3?4:1));
- if(ph!=b.lph){b.lph=ph;toast(ph==2?'BOSS IS ANGRY!':'BOSS ENRAGED!');flash=.3;flashC='225,37,27';if(ph==3){U.push({k:'aid',x:60+Math.random()*(W-120),y:-20});(TOOLS[P.wp]?[P.wp]:TK).forEach((k,i)=>U.push({k,x:70+i*110,y:-40-i*50}))}}
+ if(ph!=b.lph){b.lph=ph;toast(ph==2?'BOSS IS ANGRY!':'BOSS ENRAGED!');flash=.3;flashC='225,37,27';if(ph==3){DQ.unshift({k:'aid'});(TOOLS[P.wp]?[P.wp]:TK).forEach(k=>DQ.push({k}))}}
  b.ph+=dt*c.spd*(1+.15*(ph-1));b.x=W/2+Math.sin(b.ph)*(W/2-b.hw-10);b.y=128+Math.sin(b.t*1.4)*12;
  if(b.str>0){b.str-=dt;b.sT-=dt;if(b.sT<=0){b.sT=b.sInt;for(let i=0;i<b.arms;i++)shotA(b.x,b.y+10,b.sk,b.sSp,b.sa+i*2*Math.PI/b.arms);b.sa+=b.sRot}}
  if(b.wh){for(const w of b.wh){w.t+=dt;const q=(w.t-w.warn)/.6;if(q>=0&&q<=1){const e=q<.5?2*q*q:1-2*(1-q)*(1-q),pt=w.tip;w.tip=w.dir>0?-30+e*(W+60):W+30-e*(W+60);
@@ -321,14 +324,15 @@ function upd(dt){if(hs>0){hs-=dt;updFx(dt*.2);return}tm+=dt;stT+=dt;const d=dif(
    obT-=wd;if(obT<=0){spawnOb(d);obT=Math.max(1.8,6/(.6+d))*(.8+Math.random()*.4)}
    while(SCH.length&&score>=prevT+(bAt(bd)-prevT)*SCH[0].f)DQ.push(SCH.shift());
    const span=bAt(bd)-prevT;
-   if(!boostDone&&score>=prevT+span*.55){boostDone=true;U.push({k:'logo',lg:1,x:70+Math.random()*(W-140),y:-30})}
+   if(!boostDone&&score>=prevT+span*.55){boostDone=true;DQ.unshift({k:'logo',lg:1})}
    if(adDone<1&&score>=prevT+span*.25){adDone=1;DQ.push({k:'aid',ad:1})}
    else if(adDone==1&&score>=prevT+span*.6){adDone=2;DQ.push({k:'aid',ad:1})}}
  }else{if(!SK)updBoss(wd);
-  if(boss&&boss.in){const pp=['eye','glove','helm'];if(!boss.pq)boss.pq=pp.sort(()=>Math.random()-.5).slice(0,2);if(!boss.p1&&boss.hp<boss.mx*.75){boss.p1=1;U.push({k:boss.pq[0],x:60+Math.random()*(W-120),y:-20})}if(!boss.p2&&boss.hp<boss.mx*.45){boss.p2=1;U.push({k:boss.pq[1],x:60+Math.random()*(W-120),y:-20})}}if(boss&&boss.y>=118){mT-=wd;if(mT<=0){mT=5.5;spawn(d,1)}}
+  if(boss&&boss.in){const pp=['eye','glove','helm'];if(!boss.pq)boss.pq=pp.sort(()=>Math.random()-.5).slice(0,2);if(!boss.p1&&boss.hp<boss.mx*.75){boss.p1=1;DQ.push({k:boss.pq[0]})}if(!boss.p2&&boss.hp<boss.mx*.45){boss.p2=1;DQ.push({k:boss.pq[1]})}}if(boss&&boss.y>=118){mT-=wd;if(mT<=0){mT=5.5;spawn(d,1)}}
   if(boss&&bossHit(P.x,P.y,10))hurt()}
  /* release queued power-ups one at a time, away from obstacles */
- if(DQ.length&&P.boost<=0&&!SK&&shockT<=0){dqT-=wd;if(dqT<=0){const q=DQ.shift();if(q.k=='tool')q.k=resTool(q.sl);let x,t=0;const far=TOOLS[q.k]&&q.k!=P.wp&&P.wp!='drill';do{x=50+Math.random()*(W-100);t++}while(t<20&&(O.some(o=>o.y<160&&Math.abs(o.x-x)<o.hw+30)||(far&&Math.abs(x-P.x)<120)));q.x=x;q.y=-20;U.push(q);dqT=DQ.length>4?.6:1}}
+ if(DQ.length&&P.boost<=0&&!SK&&shockT<=0){dqT-=wd;if(dqT<=0){const c=carrier();
+   if(c){const q=DQ.shift();if(q.k=='tool')q.k=resTool(q.sl);c.cr=q;dqT=DQ.length>4?.7:1.1}else{if(!E.some(e=>e.y<0))spawn(d,2);dqT=.4}}}
  /* mobs */
  for(const e of E){
   if(e.k=='bee'){e.y+=e.vy*wd;e.ph+=wd*3.5;e.x=e.x0+Math.sin(e.ph)*e.amp;e.t-=wd;
@@ -345,11 +349,11 @@ function upd(dt){if(hs>0){hs-=dt;updFx(dt*.2);return}tm+=dt;stT+=dt;const d=dif(
    if(e.t<0&&e.y>20&&e.y<H*.55){e.t=(3+Math.random()*2)/(.6+d*.4);shotA(e.x,e.y+10,'coffee',150+20*d,aimA(e.x,e.y))}}
   else if(e.k=='snatch'){if(!e.dash){e.y+=e.vy*wd;e.x+=e.dir*120*wd;if(e.x<30||e.x>W-30)e.dir=-e.dir;   /* zig-zags, then dashes at you */
     if(e.y>260||(e.y>110&&Math.random()<wd*.8)){e.dash=1;const a=aimA(e.x,e.y);e.dvx=Math.cos(a)*(280+30*d);e.dvy=Math.max(120,Math.sin(a)*(280+30*d))}}
-   else{e.x+=e.dvx*wd;e.y+=e.dvy*wd;if(e.x<-80||e.x>W+80)e.dead=1}}
+   else{e.x+=e.dvx*wd;e.y+=e.dvy*wd;if(e.x<-80||e.x>W+80){e.dead=1;if(e.cr){DQ.unshift(e.cr);e.cr=null}}}}
   else{ /* drone: dives in, hovers & strafes, fires straight down, then leaves */
    if(e.y<e.ty&&!e.hv0){e.y+=e.vy*wd}else{e.hv0=1;e.hv+=wd;e.x+=e.dir*(55+15*d)*wd;if(e.x<26||e.x>W-26)e.dir=-e.dir;
     e.t-=wd;if(e.t<0&&e.hv<6){e.t=(1.8+Math.random())/(.6+d*.4);shotA(e.x,e.y+10,'laser',240+20*d,Math.PI/2);if(d>1.6)shotA(e.x,e.y+10,'laser',220,aimA(e.x,e.y))}if(e.hv>6)e.y+=150*wd}}
-  if(e.y>H+60)e.dead=1;
+  if(e.y>H+60){e.dead=1;if(e.cr){DQ.unshift(e.cr);e.cr=null}}
   if(!e.dead&&ht(e,P.x,P.y,10)){if(safe())kill(e,false);else if(P.inv<=0){hurt();kill(e,false)}}}
  for(const o of O){o.y+=BV*dt;if(o.y>H+120)o.dead=1;else if(P.inv<=0&&!safe()&&obHit(o,P.x,P.y,9))hurt()}
  /* player projectiles */
@@ -417,6 +421,11 @@ function hero(x,y,s,inv,md,tilt,fly){g.save();g.translate(x,y);if(inv>0&&((tm*20
  if(md=='glove'){g.fillStyle='#3cff6a';g.fillRect(-26,10,8,8);g.fillRect(18,10,8,8)}
  g.restore()}
 const MI={bee:['bee1','bee2','🐝',46],ant:['ant1','ant2','🐜',44],drone:['drone1','drone2','🛸',46]};
+function carGlow(e){const c=carC(e.cr),p=1+.18*Math.sin(tm*9+e.x),R0=(e.hh||e.r||18)*1.5;g.save();g.globalCompositeOperation='lighter';glow(c,e.x,e.y,R0*2*p,1);glow(c,e.x,e.y,R0*1.2,.8);glow('white',e.x,e.y,(e.r||18)*.9,.45);
+ g.strokeStyle=RC[c];g.lineWidth=3;g.globalAlpha=.9;g.setLineDash([8,6]);g.lineDashOffset=-tm*40;g.beginPath();g.arc(e.x,e.y,R0*p,0,7);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+ for(let i=0;i<4;i++){const a=tm*3+i*1.57;glow(c,e.x+Math.cos(a)*(e.r||18)*1.6,e.y+Math.sin(a)*(e.r||18)*1.6,5,.9)}g.restore();g.globalAlpha=1}
+function carIcon(e){const q=e.cr,y=e.y-(e.hh||e.r||18)-14+Math.sin(tm*6)*2;g.fillStyle='rgba(0,0,0,.55)';g.beginPath();g.arc(e.x,y,11,0,7);g.fill();
+ if(q.lg)logo(e.x,y,26,4);else if(ok('pu_'+q.k))spr('pu_'+q.k,e.x,y,22,0,22);else em(TOOLS[q.k]?TOOLS[q.k][1]:PPE[q.k],e.x,y,14)}
 function de(e){
  if(e.k=='scar'){const f=e.st==2?'scar4':e.st==1?(e.sd?'scar2':'scar3'):'scar1';if(ok(f))spr(f,e.x,e.y,104);else em('🚘',e.x,e.y,36);return}
  if(e.k=='kamote'){const f='kamote'+(Math.cos(e.ph)>0?1:2);if(ok(f))spr(f,e.x,e.y,60,Math.cos(e.ph)*.25);else em('🏍️',e.x,e.y,32);return}
@@ -544,7 +553,7 @@ const HELP=[
   ['pu_eye','GOGGLES','Shield + tool boost.'],
   ['pu_glove','GLOVES','Shield + power-up magnet.'],
   ['pu_helm','HELMET','Bounces shots back.'],
-  ['pu_aid','FIRST AID','+1 life.']],foot:'Grab the SAME tool again for more power!'},
+  ['pu_aid','FIRST AID','+1 life.']],foot:'Destroy GLOWING enemies to drop power-ups!'},
  {t:'SPECIALS',r:[
   ['logo','ARGOPOWER BOOST','Catch the glowing logo!'],
   ['shock','SHOCK','Collect power-ups to charge it. Tap to clear the screen.'],
@@ -624,7 +633,7 @@ function lbDraw(){g.fillStyle='rgba(0,0,0,.45)';g.fillRect(0,0,W,H);panel(10,14,
 
 function draw(){if(st=='play'){if(shake>0)g.translate((Math.random()-.5)*12*shake,(Math.random()-.5)*12*shake);if(punch>0){const z=1+punch*.5;g.translate(W/2,H/2);g.scale(z,z);g.translate(-W/2,-H/2)}}bg();if(st=='title'){title();if(howInst)instDraw();return}if(st=='lb'){lbDraw();return}if(st=='help'){helpDraw();return}
  if(st=='play')speedLines();
- for(const o of O)dob(o);for(const e of E)de(e);if(boss){dboss();drawWhip(boss);drawSlam(boss)}for(const u of U)du(u);
+ for(const o of O)dob(o);for(const e of E){if(e.cr)carGlow(e);de(e);if(e.cr)carIcon(e)}if(boss){dboss();drawWhip(boss);drawSlam(boss)}for(const u of U)du(u);
  if(P.beam&&st=='play'&&P.bm){const y1=P.y-40;g.save();g.globalCompositeOperation='lighter';
   for(const b of P.bm){const fw=b.w*(1+.15*Math.sin(tm*40+b.x)),gr=g.createLinearGradient(b.x-fw*1.6,0,b.x+fw*1.6,0);
    gr.addColorStop(0,'rgba(225,37,27,0)');gr.addColorStop(.3,'rgba(255,40,20,.55)');gr.addColorStop(.5,'rgba(255,230,200,.95)');gr.addColorStop(.7,'rgba(255,40,20,.55)');gr.addColorStop(1,'rgba(225,37,27,0)');
@@ -695,13 +704,14 @@ function exitSaver(){DEMO=0;DS=null;idleT=0;init();st='title';P=mkP();boss=null;
 function saverTick(dt){const d=DS;d.t+=dt;if(d.capT>0)d.capT-=dt;
  const it=U.filter(u=>u.y>-10&&u.y<P.y).sort((a,b)=>b.y-a.y)[0];
  const tg=boss&&boss.in?boss:E.filter(e=>e.y>20&&!e.inv).sort((a,b)=>b.y-a.y)[0];
- if(it){tx=it.x;ty=Math.max(170,Math.min(540,it.y+30))}else{tx=tg?Math.max(30,Math.min(W-30,tg.x+Math.sin(tm*1.7)*24)):W/2+Math.sin(tm*.8)*90;ty=boss?520:500+Math.sin(tm)*30}
+ const cr=E.find(e=>e.cr&&e.y>10);
+ if(it){tx=it.x;ty=Math.max(170,Math.min(540,it.y+30))}else if(cr){tx=cr.x;ty=520}else{tx=tg?Math.max(30,Math.min(W-30,tg.x+Math.sin(tm*1.7)*24)):W/2+Math.sin(tm*.8)*90;ty=boss?520:500+Math.sin(tm)*30}
  U=U.filter(u=>!TOOLS[u.k]||u.k==d.k);
  const TN=TOOLS[d.k][0];
- if(!boss&&warnT<=0&&!U.some(u=>u.k==d.k||PPE[u.k])){d.dropT-=dt;if(d.dropT<=0){
-   if(d.n<7){d.n++;U.push({k:d.k,x:Math.max(60,Math.min(W-60,P.x+(Math.random()-.5)*80)),y:Math.max(-20,P.y-190)});d.dropT=.9;
-    cap(d.n==1?'GRAB A POWER TOOL = NEW WEAPON: '+TN:d.n<7?'SAME TOOL AGAIN = MORE FIREPOWER  x'+d.n:'7th '+TN+' = MAX POWER + SKILL CHARGED!',2.4)}
-   else if(!d.ppe){d.ppe=1;const q=DPPE[d.i%4];U.push({k:q[0],x:Math.max(60,Math.min(W-60,P.x)),y:Math.max(-20,P.y-190)});cap(q[1],3);d.dropT=2.6}
+ if(!boss&&warnT<=0&&!U.some(u=>u.k==d.k||PPE[u.k])&&!E.some(e=>e.cr)){d.dropT-=dt;const c=d.dropT<=0?carrier():null;if(d.dropT<=0&&!c){if(!E.some(e=>e.y<0))spawn(dif(),2);d.dropT=.3}else if(d.dropT<=0){
+   if(d.n<7){d.n++;c.cr={k:d.k};d.dropT=.6;
+    cap(d.n==1?'DESTROY THE GLOWING ENEMY TO DROP A POWER TOOL!':d.n==2?'NEW WEAPON: '+TN+'!  GET THE SAME TOOL AGAIN...':d.n<7?'SAME TOOL AGAIN = MORE FIREPOWER  x'+d.n:'7th '+TN+' = MAX POWER + SKILL CHARGED!',2.4)}
+   else if(!d.ppe){d.ppe=1;const q=DPPE[d.i%4];c.cr={k:q[0]};cap(q[1],3);d.dropT=2.6}
    else{score=bAt(bd);cap('FILL THE BAR TO FACE THE BOSS!',2.4);d.dropT=99}}}
  if(boss&&boss.in&&!d.used&&!SK&&boss.t>1){if(!d.tap){d.tap=1.6;if(!P.skill)P.skill=d.k;cap('BOSS FIGHT: TAP THE SKILL BUTTON!',2.2)}d.tap-=dt;if(d.tap<=0){useSkill(d.k);d.used=1;d.tapFx=.4}}
  if(d.tapFx>0)d.tapFx-=dt;
