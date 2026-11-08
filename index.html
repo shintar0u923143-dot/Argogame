@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v41';
+const VER='v42';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -58,8 +58,8 @@ const PBX=W/2,PBY=22;   // pause button
    boss  = img/name/emoji, hp (loop 1), size hw/hh, ai ('bee','ant','drone' attack patterns), shot type, fire interval, move speed.
    After the last stage the game loops back to stage 1: faster and tougher (LOOP_SPAN points between later bosses). */
 const STAGES=[
- {n:'ROXAS BOULEVARD',span:4500,bg:'bg1',tiles:['bg1','bg1b','bg1d'],fb:0,mob:'roxas',obs:[['r_ob1',18,27,[48,85,159,197]],['r_ob2',18,25,[48,85,159,197]],['r_ob3',20,17,[48,85,159,197]],['r_ob4',12,22,[278,300]]],
-  kz:{bg1b:[[.6,.27,1,.9]],bg1d:[[.67,.40,1,.80],[0,.45,.64,.76]]},
+ {n:'ROXAS BOULEVARD',span:4500,bg:'bg1',tiles:['bg1','bg1b','bg1c','bg1d'],fb:0,mob:'roxas',obs:[['r_ob1',18,27,[48,85,159,197]],['r_ob2',18,25,[48,85,159,197]],['r_ob3',20,17,[48,85,159,197]],['r_ob4',12,22,[278,300]]],
+  kz:{bg1b:[[.6,.27,1,.9]],bg1c:[[.62,.27,1,.93]],bg1d:[[.67,.40,1,.80],[0,.45,.64,.76]]},
   boss:{img:'gm1',name:'GARBAGE MONSTER',emoji:'🗑️',hp:800,hw:74,hh:60,ai:'garbage',shot:'sludge',rate:1.75,spd:.7}},
  {n:'THE DRYLANDS',span:7500,bg:'bg2',tiles:['bg2','bg2b','bg2c','bg2d'],fb:1,mob:'dry',
   obs:[['d_ob1',30,26,[44,78,112]],['d_ob2',22,30,[58,252,292,326]],['d_ob3',30,27,[122,168]],['d_ob4',28,27,[182,258,304]]],
@@ -119,8 +119,8 @@ const MC={worm:'#c9a36b',scorp:'#e0602a',scar:'#bbbbbb',kamote:'#7dff4a',budol:'
 function kill(e,gain=true,nd){if(e.dead)return;if(gain)score+=e.pts;if(ARREST[e.k])arrest(e);else{exFx(e.x,e.y,26);boom(e.x,e.y,MC[e.k],9);sfx('pop')}e.dead=1;if(e.cr){sfx('drop');const q=e.cr;e.cr=null;q.x=Math.max(40,Math.min(W-40,e.x));q.y=Math.max(20,e.y);U.push(q);burst(q.x,q.y,carC(q),20)}}
 const carC=q=>q.lg?'fire':TOOLS[q.k]?'helm':(GL[q.k]?q.k:'white');
 /* people are never blown up: they get ARRESTED (caught pose + a jail cage drops on them) */
-let JL=[];const ARREST={kamote:['kamote3',.22,'jail1',54,56],budol:['budol3',.21,'jail1',50,58],scar:['scar7',.243,'jail2',58,64]};
-function arrest(e){JL.push({k:e.k,x:e.x,y:e.y,t:0,fl:e.k=='kamote'&&Math.cos(e.ph)<0});boom(e.x,e.y-24,'#ffe066',6)}
+let JL=[];const ARREST={kamote:['kamote3',.23,'jail1',54,58],budol:['budol3',.21,'jail1',50,58],scar:['scar7',.243,'jail2',58,64]};
+function arrest(e){JL.push({k:e.k,x:e.x,y:e.y,t:0,fl:e.k=='kamote'&&Math.random()<.5});boom(e.x,e.y-24,'#ffe066',6)}
 function updJail(dt){for(const j of JL){j.t+=dt;j.y+=BV*dt;if(!j.ld&&j.t>=.22){j.ld=1;sfx('arrest');boom(j.x,j.y+ARREST[j.k][4]*.45,'#d8d8d8',8);shake=Math.max(shake,.12)}}for(const j of JL)if(j.t>=1.1&&!j.gone){j.gone=1;boom(j.x,j.y,'#ffe066',8);boom(j.x,j.y,'#ffffff',6)}JL=JL.filter(j=>!j.gone&&j.y<H+100)}
 function dJail(j){const a=ARREST[j.k],t=j.t,D=.22,p=Math.min(1,t/D),out=Math.max(0,(t-.8)/.3),sc=1-.5*out;g.save();g.globalAlpha=1-out;g.translate(j.x,j.y);g.scale(sc,sc);g.translate(-j.x,-j.y);dJail2(j,a,t,D,p,j.y-(1-p*p)*120);g.restore();g.globalAlpha=1}
 function dJail2(j,a,t,D,p,cy){const A0=g.globalAlpha;
@@ -470,7 +470,7 @@ function carIcon(e){const q=e.cr,y=e.y-(e.hh||e.r||18)-14+Math.sin(tm*6)*2;g.fil
  if(q.lg)logo(e.x,y,26,4);else if(ok('pu_'+q.k))spr('pu_'+q.k,e.x,y,22,0,22);else em(TOOLS[q.k]?TOOLS[q.k][1]:PPE[q.k],e.x,y,14)}
 function de(e){
  if(e.k=='scar'){let f='scar1',fl=false;if(e.st==1)f=e.db?'scar5':e.sd?'scar2':'scar3';else if(e.st==2){if(e.db)f='scar6';else{f='scar4';fl=e.sd}}if(ok(f))sprK(f,e.x,e.y,.243,fl);else em('🚘',e.x,e.y,36);return}
- if(e.k=='kamote'){const f='kamote'+(Math.abs(Math.cos(e.ph))>.35?1:2);if(ok(f))sprK(f,e.x,e.y,.22,Math.cos(e.ph)<0);else em('🏍️',e.x,e.y,32);return}
+ if(e.k=='kamote'){const f='kamote'+(Math.abs(Math.cos(e.ph))>.35?1:2);if(ok(f)){g.save();g.translate(e.x,e.y);g.rotate(-Math.cos(e.ph)*.18);sprK(f,0,0,.23);g.restore()}else em('🏍️',e.x,e.y,32);return}
  if(e.k=='budol'){const f='budol'+(1+((e.fr|0)%2));if(ok(f))sprK(f,e.x,e.y,.21);else em('🕴️',e.x,e.y,30);return}
  if(e.k=='car'){if(e.wt>0){const fl=((tm*8)|0)%2;g.fillStyle=`rgba(255,40,30,${fl?.2:.1})`;g.fillRect(e.x-e.hw-6,84,e.hw*2+12,H-84);if(fl)tt('⚠',e.x,104,24,'#ff3b30','center',3)}
   if(ok(e.im))spr(e.im,e.x,e.y,e.hh*2.3,0,e.hw*2.6);else em('🚗',e.x,e.y,36);return}
