@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v36';
+const VER='v37';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -113,7 +113,7 @@ function kill(e,gain=true,nd){if(e.dead)return;if(gain)score+=e.pts;exFx(e.x,e.y
 const carC=q=>q.lg?'fire':TOOLS[q.k]?'helm':(GL[q.k]?q.k:'white');
 function hitE(e,v){const strong=TOOLS[P.wp]&&P.cols>=3;if(e.k=='scar'&&!e.st&&strong){v*=.4;e.af=.12}if(e.inv){if(Math.random()<.25)boom(e.x,e.y+e.hh*.6,'#fff',2);return}if(e.arm&&e.y<H*.5&&strong){v*=.3;e.af=.12}e.hp-=v;if(e.hp<=0)kill(e)}
 function bhit(d){if(!boss)return;boss.hp-=d;boss.fl=.08;if(boss.hp<=0)bossDie()}
-const safe=()=>P.t.eye>0||P.t.glove>0||P.t.aid>0||P.boost>0||!!SK;
+const safe=()=>P.t.eye>0||P.t.glove>0||P.t.helm>0||P.t.aid>0||P.boost>0||!!SK;
 function hurt(){if(DEMO||P.inv>0||safe())return;
  P.li--;sfx('hurt');if(P.dl>0)P.dl--;else P.cols=Math.max(1,P.cols-1);boom(P.x,P.y,R,24);P.inv=2.2;
  if(P.li<=0){st='over';ov=0;sfx('over');submit();if(score>hi){hi=score;try{localStorage.setItem('ap_hi',hi)}catch(e){}}}}
@@ -357,7 +357,7 @@ function upd(dt){if(hs>0){hs-=dt;updFx(dt*.2);return}tm+=dt;stT+=dt;const d=dif(
     e.t-=wd;if(e.t<0&&e.hv<6){e.t=(1.8+Math.random())/(.6+d*.4);shotA(e.x,e.y+10,'laser',240+20*d,Math.PI/2);if(d>1.6)shotA(e.x,e.y+10,'laser',220,aimA(e.x,e.y))}if(e.hv>6)e.y+=150*wd}}
   if(e.y>H+60){e.dead=1;if(e.cr){DQ.unshift(e.cr);e.cr=null}}
   if(!e.dead&&ht(e,P.x,P.y,10)){if(safe())kill(e,false);else if(P.inv<=0){hurt();kill(e,false)}}}
- for(const o of O){o.y+=BV*dt;if(o.y>H+120)o.dead=1;else if(P.inv<=0&&!safe()&&obHit(o,P.x,P.y,9))hurt()}
+ for(const o of O){o.y+=BV*dt;if(o.y>H+120)o.dead=1;else if(obHit(o,P.x,P.y,9)){if(safe()){o.dead=1;exFx(o.x,o.y,40);boom(o.x,o.y,'#c9a36b',16);shake=Math.max(shake,.15);sfx('pop')}else if(P.inv<=0)hurt()}}
  /* player projectiles */
  for(const b of B){b.x+=b.vx*dt;b.y+=b.vy*dt;b.a=(b.a||0)+dt*14;if(b.y<-30||b.y>H+30)b.dead=1;
   if(b.k=='d'){b.life-=dt;if(b.life<0)b.dead=1;
