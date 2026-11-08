@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v42';
+const VER='v43';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -241,13 +241,23 @@ function near(b){let t=null,d=1e9;for(const e of E){if(e.dead||e.y>b.y)continue;
 function shotA(x,y,k,spd,a,ex){sfx('eshot');X.push(Object.assign({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,k,r:k=='laser'?5:k=='rbolt'?5:k=='missile'?7:k=='badorb'||k=='sludge'||k=='rock'?8:6,rf:0,ay:0,hm:0},ex))}
 const aimA=(x,y)=>Math.atan2(P.y-y,P.x-x);
 
+/* ===== ANT SWARMS: small ants march in formations (snake, V, diagonal sweep, spinning ring, marching block) ===== */
+function antForm(d,hm){const n=6+Math.min(4,(d*1.5)|0),f=Math.random()*5|0,cols=Math.ceil(n/2),mg=f==3?60:f==4?cols*13+34:f==1?(n/2)*24+20:70,cx=mg+Math.random()*(W-2*mg);
+ for(let i=0;i<n;i++){const e={k:'ant',fm:f,i,n,age:0,hp:hm,r:11,vy:78+22*d,ph:Math.random()*6,cx,L:Math.random()<.5?-1:1,x:cx,y:-60,rot:0,t:i%4==0?1.2+Math.random()*2.5:1e9,pts:10};antPos(e);E.push(e)}}
+function antPos(e){const a=e.age,i=e.i,c=(e.n-1)/2,px=e.x,py=e.y;
+ if(e.fm==0){e.y=-20-i*24+e.vy*a;e.x=e.cx+Math.sin(e.y*.02+e.ph)*60}                                   /* snake */
+ else if(e.fm==1){e.y=-20-Math.abs(i-c)*20+e.vy*a;e.x=e.cx+(i-c)*24+Math.sin(a*2+e.ph)*14}            /* V */
+ else if(e.fm==2){const s=a*e.vy*1.2-i*26;if(s<0){e.y=-60;e.x=e.L>0?30:W-30}else{e.x=(e.L>0?30:W-30)+e.L*s*.45;e.y=-20+s*.85;if(e.x<-40||e.x>W+40)e.y=H+100}}  /* diagonal sweep */
+ else if(e.fm==3){const g=a*2.4+i*6.283/e.n;e.x=e.cx+Math.cos(g)*36;e.y=-60+e.vy*.85*a+Math.sin(g)*36}   /* spinning ring */
+ else{const cols=Math.ceil(e.n/2);e.x=e.cx+(i%cols-(cols-1)/2)*26+Math.sin(a*1.6+e.ph)*30;e.y=-20-((i/cols)|0)*26+e.vy*a}   /* marching block */
+ const dx=e.x-px,dy=e.y-py;if(a>0&&dx*dx+dy*dy>.01){const t=Math.atan2(dy,dx)-Math.PI/2;let q=t-e.rot;q=Math.atan2(Math.sin(q),Math.cos(q));e.rot+=q*.25}}
 /* ===== SPAWNING ===== */
 function spawn(d,cnt){const s=ST().mob,n=cnt||2+Math.min(2,(d*.7)|0),vy=70+26*d,hm=1+.5*lp(),x=50+Math.random()*(W-100),ph=Math.random()*6;
  if(s=='bee'){for(let i=0;i<n;i++)E.push({k:'bee',x,x0:x,y:-20-i*38,hp:hm,r:14,vy,ph,amp:35,t:2+Math.random()*3,pts:15})}
  else if(s=='ant'||s=='dry'){const r=s=='dry'?Math.random():1,nw=E.filter(q=>q.k=='worm'&&!q.dead).length,ns=E.filter(q=>q.k=='scorp'&&!q.dead).length;
   if(r<.24&&nw<2)E.push({k:'worm',bur:1,x:40+Math.random()*(W-80),y:-30,hp:4*hm,r:19,st:0,t:.8+Math.random(),em:0,pts:35});   /* burrows under the sand, pops up to spit rocks */
   else if(r<.52&&ns<3){const c=n>3&&ns<2?2:1;for(let i=0;i<c;i++)E.push({k:'scorp',arm:1,x:60+Math.random()*(W-120),y:-30-i*70,hp:4*hm,r:21,vy:vy*.7,dir:Math.random()<.5?-1:1,mt:.6+Math.random(),t:1.4+Math.random()*1.5,st:0,fr:0,pts:40})}   /* scuttles side to side, stings venom */
-  else for(let i=0;i<n;i++){const o=(i-(n-1)/2);E.push({k:'ant',x:x+o*40,x0:x+o*40,y:-20-Math.abs(o)*28,hp:2*hm,r:15,vy:vy*1.05,ph,amp:14,t:2.5+Math.random()*3,pts:20})}}
+  else antForm(d,hm)}
  else if(s=='roxas'){const r=Math.random();
   if(r<.3&&E.filter(q=>q.k=='scar').length<2){const l=[48,85,159,197][Math.random()*4|0];E.push({k:'scar',x:l,y:-60,hw:17,hh:26,r:17,hp:3*hm,vy:85+16*d,st:0,sd:0,t:1+Math.random(),pts:40})}
   else if(r<.7){for(let i=0;i<Math.min(2,n-1);i++){const x0=70+Math.random()*(W-140);E.push({k:'kamote',arm:1,x:x0,x0,y:-40-i*90,hp:2*hm,r:16,vy:vy*1.3,ph:Math.random()*6,pts:25})}}
@@ -370,8 +380,8 @@ function upd(dt){if(hs>0){hs-=dt;updFx(dt*.2);return}tm+=dt;stT+=dt;const d=dif(
  for(const e of E){
   if(e.k=='bee'){e.y+=e.vy*wd;e.ph+=wd*3.5;e.x=e.x0+Math.sin(e.ph)*e.amp;e.t-=wd;
    if(e.t<0&&e.y>10&&e.y<H*.6){e.t=(2.4+Math.random()*2)/(.6+d*.4);shotA(e.x,e.y+10,'sting',160+30*d,aimA(e.x,e.y))}}
-  else if(e.k=='ant'){e.y+=e.vy*wd;e.ph+=wd*2.2;e.x=e.x0+Math.sin(e.ph)*e.amp;e.t-=wd;
-   if(e.t<0&&e.y>10&&e.y<H*.55){e.t=(2.6+Math.random()*2)/(.6+d*.4);const a=aimA(e.x,e.y);shotA(e.x,e.y+10,'spit',150+25*d,a);if(d>1.6)shotA(e.x,e.y+10,'spit',150+25*d,a+.35)}}
+  else if(e.k=='ant'){if(e.fm!=null){e.age+=wd;antPos(e)}else{e.y+=e.vy*wd;e.ph+=wd*2.2;e.x=e.x0+Math.sin(e.ph)*e.amp}e.t-=wd;
+   if(e.t<0&&e.y>10&&e.y<H*.55){e.t=e.fm!=null?(3.4+Math.random()*2)/(.6+d*.4):(2.6+Math.random()*2)/(.6+d*.4);const a=aimA(e.x,e.y);shotA(e.x,e.y+10,'spit',150+25*d,a);if(d>1.6)shotA(e.x,e.y+10,'spit',150+25*d,a+.35)}}
  else if(e.k=='worm'){e.t-=wd;e.y+=BV*dt;   /* rides the ground like an obstacle */
    if(e.st==0){if(e.y<H*.5)e.x+=Math.sign(P.x-e.x)*Math.min(Math.abs(P.x-e.x),55*wd);if(e.t<=0&&e.em<2&&e.y>70&&e.y<H*.6){e.st=1;e.t=.35;boom(e.x,e.y+20,'#c9a36b',10)}}
    else if(e.st==1){if(e.t<=0){e.st=2;e.bur=0;e.t=1.7;e.sh=.5}}
@@ -482,7 +492,7 @@ function de(e){
   const f='wm'+(e.st+1),h=[0,50,86,52][e.st];g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(e.x,gy-4,24,7,0,0,7);g.fill();if(ok(f))spr(f,e.x,gy-h/2,h);else em('🪱',e.x,e.y,30);return}
  if(e.k=='corp'){const f='corp'+(1+((e.fr|0)%4));if(ok(f))spr(f,e.x,e.y,52);else em('🧟',e.x,e.y,30);return}
  if(e.k=='snatch'){const f='snatch'+((e.dash?e.dvx:e.dir)<0?1:2);if(ok(f))spr(f,e.x,e.y,56);else em('🛵',e.x,e.y,30);return}
-if(e.k=='ant'){if(ok('antw1')){spr('antw'+(1+(((tm*10+e.x*.1)|0)%4)),e.x,e.y,54);return}if(ok('ant1')){spr('ant1',e.x,e.y,44,Math.sin(tm*14+e.x)*.12);return}}const m=MI[e.k],f=((tm*10+e.x)|0)%2?m[0]:m[1];if(ok(f))spr(f,e.x,e.y,m[3]);else em(m[2],e.x,e.y,m[3]*.65)}
+if(e.k=='ant'){if(ok('antw1')){spr('antw'+(1+(((tm*14+(e.i||0))|0)%4)),e.x,e.y,e.fm!=null?34:44,e.rot||0);return}if(ok('ant1')){spr('ant1',e.x,e.y,44,Math.sin(tm*14+e.x)*.12);return}}const m=MI[e.k],f=((tm*10+e.x)|0)%2?m[0]:m[1];if(ok(f))spr(f,e.x,e.y,m[3]);else em(m[2],e.x,e.y,m[3]*.65)}
 const OBC={ob1a:'#8a5a2b',ob1b:'#c9a36b',ob2a:'#3f8f3a',ob2b:'#a89878',ob3a:'#8d939c',ob3b:'#8d939c'};
 function dob(o){if(ok(o.im)){const near=st=='play'&&o.y<P.y&&P.y-o.y<220&&Math.abs(o.x-P.x)<o.hw+30;
   g.fillStyle='rgba(0,0,0,.38)';g.beginPath();g.ellipse(o.x+5,o.y+o.hh*.75,o.hw*1.05,o.hh*.3,0,0,7);g.fill();
