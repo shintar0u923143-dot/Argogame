@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v39';
+const VER='v40';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -121,13 +121,14 @@ const carC=q=>q.lg?'fire':TOOLS[q.k]?'helm':(GL[q.k]?q.k:'white');
 /* people are never blown up: they get ARRESTED (caught pose + a jail cage drops on them) */
 let JL=[];const ARREST={kamote:['kamote3',.29,'jail1',68,70],budol:['budol3',.26,'jail1',58,66],scar:['scar7',.297,'jail2',70,78]};
 function arrest(e){JL.push({k:e.k,x:e.x,y:e.y,t:0,fl:e.k=='kamote'&&Math.cos(e.ph)<0});boom(e.x,e.y-24,'#ffe066',6)}
-function updJail(dt){for(const j of JL){j.t+=dt;j.y+=BV*dt;if(!j.ld&&j.t>=.22){j.ld=1;sfx('arrest');boom(j.x,j.y+ARREST[j.k][4]*.45,'#d8d8d8',8);shake=Math.max(shake,.12)}}JL=JL.filter(j=>j.y<H+100)}
-function dJail(j){const a=ARREST[j.k],t=j.t,D=.22,p=Math.min(1,t/D),cy=j.y-(1-p*p)*120;
+function updJail(dt){for(const j of JL){j.t+=dt;j.y+=BV*dt;if(!j.ld&&j.t>=.22){j.ld=1;sfx('arrest');boom(j.x,j.y+ARREST[j.k][4]*.45,'#d8d8d8',8);shake=Math.max(shake,.12)}}for(const j of JL)if(j.t>=1.1&&!j.gone){j.gone=1;boom(j.x,j.y,'#ffe066',8);boom(j.x,j.y,'#ffffff',6)}JL=JL.filter(j=>!j.gone&&j.y<H+100)}
+function dJail(j){const a=ARREST[j.k],t=j.t,D=.22,p=Math.min(1,t/D),out=Math.max(0,(t-.8)/.3),sc=1-.5*out;g.save();g.globalAlpha=1-out;g.translate(j.x,j.y);g.scale(sc,sc);g.translate(-j.x,-j.y);dJail2(j,a,t,D,p,j.y-(1-p*p)*120);g.restore();g.globalAlpha=1}
+function dJail2(j,a,t,D,p,cy){const A0=g.globalAlpha;
  if(ok(a[0]))sprK(a[0],j.x,j.y,a[1],j.fl);
  if(t<D){g.globalAlpha=.4*p;g.fillStyle='#000';g.beginPath();g.ellipse(j.x,j.y+a[4]*.45,a[3]*.5*p,6*p,0,0,7);g.fill()}
- g.globalAlpha=Math.min(1,t/.06);if(ok(a[2]))g.drawImage(IM[a[2]],j.x-a[3]/2,cy-a[4]/2,a[3],a[4]);g.globalAlpha=1;
- if(t<D)return;const on=((t*6)|0)%2;g.save();g.globalCompositeOperation='lighter';glow(on?'red':'eye',j.x,cy-a[4]*.42,30,.85);g.restore();g.globalAlpha=1;
- if(t<1.6){const q=t-D,s=q<.12?1.9-q/.12*.9:1;g.save();g.globalAlpha=Math.min(1,(1.6-t)/.3);g.translate(j.x,cy-a[4]*.62);g.rotate(-.12);g.scale(s,s);tt('HULI KA!',0,0,17,Y,'center',3);g.restore();g.globalAlpha=1}}
+ g.globalAlpha=A0*Math.min(1,t/.06);if(ok(a[2]))g.drawImage(IM[a[2]],j.x-a[3]/2,cy-a[4]/2,a[3],a[4]);g.globalAlpha=A0;
+ if(t<D)return;const on=((t*6)|0)%2;g.save();g.globalCompositeOperation='lighter';glow(on?'red':'eye',j.x,cy-a[4]*.42,30,.85*A0);g.restore();g.globalAlpha=A0;
+ {const q=t-D,s=q<.12?1.9-q/.12*.9:1;g.save();g.globalAlpha=A0;g.translate(j.x,cy-a[4]*.62);g.rotate(-.12);g.scale(s,s);tt('HULI KA!',0,0,17,Y,'center',3);g.restore();g.globalAlpha=A0}}
 function hitE(e,v){if(e.bur)return;const strong=TOOLS[P.wp]&&P.cols>=3;if(e.k=='scar'&&!e.st&&strong){v*=.4;e.af=.12}if(e.inv){if(Math.random()<.25)boom(e.x,e.y+e.hh*.6,'#fff',2);return}if(e.arm&&e.y<H*.5&&strong){v*=.3;e.af=.12}e.hp-=v;if(e.hp<=0)kill(e)}
 function bhit(d){if(!boss)return;boss.hp-=d;boss.fl=.08;if(boss.hp<=0)bossDie()}
 const safe=()=>P.t.eye>0||P.t.glove>0||P.t.helm>0||P.t.aid>0||P.boost>0||!!SK;
