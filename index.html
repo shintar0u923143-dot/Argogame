@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v44';
+const VER='v45';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -71,7 +71,7 @@ const STAGES=[
   obs:[['c_ob1',16,18,[76,110,255]],['c_ob2',14,18,[76,110,255]],['c_ob3',14,18,[76,296]],['c_ob4',13,17,[76,296]]],
   kz:{bg3b:[[.16,.23,.84,.82]],bg3c:[[.19,.51,.74,.59]],bg3d:[[.27,.12,.38,.91],[.63,.12,.74,.91],[.63,.49,1,.63]]},
   boss:{img:'boss3',name:'BATTLE DRONE',emoji:'🛸',hp:1500,hw:70,hh:60,ai:'drone',shot:'laser',rate:1.2,spd:1.1}},
- {n:'QUINTIN PAREDES',span:9000,bg:'bg4',tiles:['bg4','bg4b'],fb:2,mob:'binondo',deco:1,obs:[['ob4a',36,34,[72,288]],['ob4b',30,36,[72,288]],['ob4c',34,34,[72,288]],['ob4d',21,44,[104,256]]],
+ {n:'QUINTIN PAREDES',span:9000,bg:'bg4',tiles:['bg4','bg4b'],fb:2,mob:'binondo',deco:1,obs:[['ob4a',19,17,[74,286]],['ob4b',17,20,[74,286]],['ob4c',19,19,[74,286]]],
   boss:{img:'boss4',name:'DRAGON OF BAD LUCK',emoji:'🐉',hp:1800,hw:64,hh:64,ai:'dragon',shot:'badorb',rate:1.25,spd:.8}}];
 const LOOP_SPAN=9000,NST=()=>STAGES.length;
 /* every image a stage names is loaded automatically (backgrounds named bg*.jpg, everything else .png) */
@@ -122,7 +122,7 @@ const MC={worm:'#c9a36b',scorp:'#e0602a',scar:'#bbbbbb',kamote:'#7dff4a',budol:'
 function kill(e,gain=true,nd){if(e.dead)return;if(gain)score+=e.pts;if(ARREST[e.k])arrest(e);else{exFx(e.x,e.y,26);boom(e.x,e.y,MC[e.k],9);sfx('pop')}e.dead=1;if(e.cr){sfx('drop');const q=e.cr;e.cr=null;q.x=Math.max(40,Math.min(W-40,e.x));q.y=Math.max(20,e.y);U.push(q);burst(q.x,q.y,carC(q),20)}}
 const carC=q=>q.lg?'fire':TOOLS[q.k]?'helm':(GL[q.k]?q.k:'white');
 /* people are never blown up: they get ARRESTED (caught pose + a jail cage drops on them) */
-let JL=[];const ARREST={kamote:['kamote3',.23,'jail1',54,58],budol:['budol3',.21,'jail1',50,58],scar:['scar7',.243,'jail2',58,64]};
+let JL=[];const ARREST={kamote:['kamote3',.23,'jail1',54,58],budol:['budol3',.21,'jail1',50,58],scar:['scar7',.243,'jail2',58,64],corp:['corp1',.306,'jail1',48,58],snatch:['snatch1',.33,'jail1',52,60]};
 function arrest(e){JL.push({k:e.k,x:e.x,y:e.y,t:0,fl:e.k=='kamote'&&Math.random()<.5});boom(e.x,e.y-24,'#ffe066',6)}
 function updJail(dt){for(const j of JL){j.t+=dt;j.y+=BV*dt;if(!j.ld&&j.t>=.22){j.ld=1;sfx('arrest');boom(j.x,j.y+ARREST[j.k][4]*.45,'#d8d8d8',8);shake=Math.max(shake,.12)}}for(const j of JL)if(j.t>=1.1&&!j.gone){j.gone=1;boom(j.x,j.y,'#ffe066',8);boom(j.x,j.y,'#ffffff',6)}JL=JL.filter(j=>!j.gone&&j.y<H+100)}
 function dJail(j){const a=ARREST[j.k],t=j.t,D=.22,p=Math.min(1,t/D),out=Math.max(0,(t-.8)/.3),sc=1-.5*out;g.save();g.globalAlpha=1-out;g.translate(j.x,j.y);g.scale(sc,sc);g.translate(-j.x,-j.y);dJail2(j,a,t,D,p,j.y-(1-p*p)*120);g.restore();g.globalAlpha=1}
@@ -276,7 +276,8 @@ function spawn(d,cnt){const s=ST().mob,n=cnt||2+Math.min(2,(d*.7)|0),vy=70+26*d,
   else if(r<.7){for(let i=0;i<Math.min(2,n-1);i++){const x0=70+Math.random()*(W-140);E.push({k:'kamote',arm:1,x:x0,x0,y:-40-i*90,hp:2*hm,r:16,vy:vy*1.3,ph:Math.random()*6,pts:25})}}
   else{const c=Math.min(2,n);for(let i=0;i<c;i++)E.push({k:'budol',arm:1,x:60+Math.random()*(W-120),y:-30-i*60,hp:2*hm,r:15,vy:vy*.75,t:1.5+Math.random()*2,fr:Math.random()*2,pts:25})}}
  else if(s=='binondo'){const r=Math.random();
-  if(r<.45){const l=[126,180,234][Math.random()*3|0],v=1+(Math.random()*4|0),L=[[21,46],[19,40],[19,40],[20,36]][v-1];sfx('horn');E.push({k:'car',inv:1,im:'car'+v,x:l,y:-80,hw:L[0],hh:L[1],r:L[0],hp:99,vy:170+30*d,wt:.85,pts:v==1?35:25})}
+  const busy=E.filter(q=>q.k=='car'&&!q.dead&&q.y<H*.75).map(q=>q.x),free=[126,180,234].filter(l=>!busy.includes(l));
+  if(r<.45&&busy.length<2&&free.length){const l=free[Math.random()*free.length|0],v=1+(Math.random()*4|0),L=[[21,46],[19,40],[19,40],[20,36]][v-1];sfx('horn');E.push({k:'car',inv:1,im:'car'+v,x:l,y:-80,hw:L[0],hh:L[1],r:L[0],hp:99,vy:150+25*d,wt:1.15,pts:v==1?35:25})}
   else if(r<.72){const sd=Math.random()<.5,c=Math.min(2,n);for(let i=0;i<c;i++)E.push({k:'corp',arm:1,x:sd?46+i*34:W-46-i*34,y:-20-i*42,hp:3*hm,r:16,vy:vy*.9,t:1.8+Math.random()*2.5,pts:20,fr:Math.random()*4})}
   else{for(let i=0;i<Math.min(2,n-1);i++)E.push({k:'snatch',arm:1,x:40+Math.random()*(W-80),y:-30-i*70,hp:3*hm,r:17,vy:vy*1.1,dir:Math.random()<.5?-1:1,dash:0,pts:25})}}
  else{for(let i=0;i<n;i++)E.push({k:'drone',x:Math.max(30,Math.min(W-30,x+(i-(n-1)/2)*70)),y:-20-i*30,hp:2*hm,r:14,vy:vy*1.4,ty:80+Math.random()*130,dir:Math.random()<.5?-1:1,t:1.5+Math.random()*1.5,hv:0,pts:25})}
@@ -714,8 +715,11 @@ function draw(){if(st=='play'){if(shake>0)g.translate((Math.random()-.5)*12*shak
   else if(b.k=='n'){g.save();g.translate(b.x,b.y);g.rotate(Math.atan2(b.vx,-b.vy));if(P.dl>0){g.globalCompositeOperation='lighter';glow('helm',0,0,7+P.dl,.6);g.globalCompositeOperation='source-over';g.globalAlpha=1}g.fillStyle='#e8e8ee';g.fillRect(-1,-8,2,14);g.fillRect(-3,4,6,2);g.restore()}
   else if(ok('pdisc'))spr('pdisc',b.x,b.y,34,b.a);else{g.save();g.translate(b.x,b.y);g.rotate(b.a);g.fillStyle='#c8ccd2';g.beginPath();g.arc(0,0,13,0,7);g.fill();g.strokeStyle=R;g.lineWidth=3;g.beginPath();
    for(let i=0;i<4;i++){g.moveTo(0,0);g.lineTo(Math.cos(i*1.57)*13,Math.sin(i*1.57)*13)}g.stroke();g.restore()}}
- const XI={sting:['sting',20,'#ffe066'],spit:['spit',18,'#9be02b'],laser:['dlaser',26,'#ff4d6d'],missile:['missile',30,'#c8ccd2'],badorb:['badorb',32,'#a050ff'],coin:['badcoin',22,'#7a3cc0'],coffee:['coffee',14,'#8b5a2b'],sludge:['sludge',28,'#6a8a2a'],bottle:['bottle',28,'#7ab0e0'],rbolt:['rbolt',30,'#ff6a2a'],cash:['cash',14,'#3fae4a'],venom:['venom',24,'#7dff4a'],rock:['rock',24,'#a0522d']};
- for(const s of X){const q=XI[s.k];if(s.rf){g.save();g.shadowColor='#ffd21f';g.shadowBlur=10}
+ const SHC={badorb:'#ff3cff',coin:'#ff3cff',sludge:'#b6ff3c',rbolt:'#ff7a1a'};
+ const XI={sting:['sting',20,'#ffe066'],spit:['spit',18,'#9be02b'],laser:['dlaser',26,'#ff4d6d'],missile:['missile',30,'#c8ccd2'],badorb:['badorb',32,'#a050ff'],coin:['badcoin',26,'#7a3cc0'],coffee:['coffee',14,'#8b5a2b'],sludge:['sludge',28,'#6a8a2a'],bottle:['bottle',28,'#7ab0e0'],rbolt:['rbolt',30,'#ff6a2a'],cash:['cash',14,'#3fae4a'],venom:['venom',24,'#7dff4a'],rock:['rock',24,'#a0522d']};
+ for(const s of X){const q=XI[s.k];if(!s.rf){const hr=Math.max(9,q[1]*.5),pu=.5+.5*Math.sin(tm*14+s.x);g.save();g.globalCompositeOperation='lighter';g.globalAlpha=.55;g.fillStyle=SHC[s.k]||q[2];g.beginPath();g.arc(s.x,s.y,hr+2,0,7);g.fill();g.restore();
+   g.strokeStyle=`rgba(255,255,255,${.55+.4*pu})`;g.lineWidth=2;g.beginPath();g.arc(s.x,s.y,hr+3+pu*2,0,7);g.stroke()}
+  if(s.rf){g.save();g.shadowColor='#ffd21f';g.shadowBlur=10}
   if(ok(q[0])){spr(q[0],s.x,s.y,q[1],s.k=='coin'||s.k=='bottle'||s.k=='rock'?tm*7:Math.atan2(s.vy,s.vx)+(s.k=='spit'||s.k=='venom'||s.k=='missile'||s.k=='badorb'||s.k=='sludge'||s.k=='rbolt'?Math.PI/2:-Math.PI/2))}else if(s.k=='missile'){g.save();g.translate(s.x,s.y);g.rotate(Math.atan2(s.vy,s.vx)-Math.PI/2);g.fillStyle='#ff9a1f';g.beginPath();g.moveTo(-3,-9);g.lineTo(0,-16-Math.random()*6);g.lineTo(3,-9);g.fill();g.fillStyle=q[2];g.fillRect(-3.5,-9,7,18);g.fillStyle=R;g.beginPath();g.moveTo(-3.5,9);g.lineTo(0,15);g.lineTo(3.5,9);g.fill();g.restore()}else{g.fillStyle=q[2];g.beginPath();if(s.k=='laser')g.ellipse(s.x,s.y,3,9,Math.atan2(s.vy,s.vx)-Math.PI/2,0,7);else g.arc(s.x,s.y,5,0,7);g.fill()}
   if(s.rf)g.restore()}
  if(st=='play'||st=='over'){const md=sMode();if(st=='play'){const y=P.y+Math.sin(tm*6)*2;if(P.boost>0){for(let i=1;i<=4;i++){g.globalAlpha=.2*(5-i)/4;hero(P.x,y+i*18,sex,0,md,P.tilt,0)}g.globalAlpha=1;drawFx(1);aura(P.x,y)}for(const k of['eye','glove','helm','aid'])if(P.t[k]>0)shield(P.x,y,k);hero(P.x,y,sex,P.inv,md,P.tilt,1)}}
