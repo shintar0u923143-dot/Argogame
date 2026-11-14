@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v48';
+const VER='v49';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -822,9 +822,13 @@ function aInit(){if(SND.ctx){if(SND.ctx.state=='suspended')SND.ctx.resume();retu
  SND.sfx=c.createGain();SND.sfx.connect(cp);SND.mus=c.createGain();SND.mus.gain.value=0;SND.mus.connect(cp);
  const n=c.createBuffer(1,c.sampleRate*2,c.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;SND.noise=n;sLoad()}
 /* recorded sound samples (assets/sfx); every sound falls back to the synthesized version until its file has loaded */
-const SB={},SKEYS=['nail','eshot','gspit','hammer','bossdie','disc','hum','water','saw'],SLOOP={hum:[.1,3.1],water:[.1,3.1],saw:[.1,2.5]},SLV={hum:.16,water:.5,saw:.42};
+/* game moment -> [file in assets/sfx, volume, random pitch] (Kenney CC0 packs + user's own recordings) */
+const SM={drill:['drill',.18,1],pop:['pop',.35,1],hurt:['hurt',.7],drop:['drop',.45],tool:['tool',.5],max:['max',.55],ready:['ready',.6],shield:['shield',.5],aid:['aid',.55],
+ reflect:['reflect',.35,1],shockGet:['shockget',.5],shock:['shock',.9],boost:['boost',.6],sting:['sting',.6],swing:['swing',.5],roar:['roar',.9],fanfare:['fanfare',.6],
+ start:['start',.55],over:['over',.6],whip:['whip',.7],arrest:['arrest',.6],slam:['slam',.9],click:['click',.4]};
+const SB={},SKEYS=['nail','eshot','gspit','hammer','bossdie','disc','hum','water','saw','warn',...new Set(Object.values(SM).map(m=>m[0]))],SLOOP={hum:[.1,3.1],water:[.1,3.1],saw:[.1,2.5]},SLV={hum:.16,water:.5,saw:.42};
 function sLoad(){for(const k of SKEYS)fetch('assets/sfx/'+k+'.mp3').then(r=>r.arrayBuffer()).then(b=>new Promise((ok,no)=>SND.ctx.decodeAudioData(b,ok,no))).then(buf=>{SB[k]=buf}).catch(()=>{})}
-function smp(k,vol,rate){const b=SB[k];if(!b)return false;const c=SND.ctx,s=c.createBufferSource(),v=c.createGain();s.buffer=b;if(rate)s.playbackRate.value=rate;v.gain.value=vol;s.connect(v);v.connect(SND.sfx);s.start();return true}
+function smp(k,vol,rate,dl){const b=SB[k];if(!b)return false;const c=SND.ctx,s=c.createBufferSource(),v=c.createGain();s.buffer=b;if(rate)s.playbackRate.value=rate;v.gain.value=vol;s.connect(v);v.connect(SND.sfx);s.start(c.currentTime+(dl||0));return true}
 function mkSLoop(k){const c=SND.ctx,g2=c.createGain();g2.gain.value=0;g2.connect(SND.sfx);const s=c.createBufferSource();s.buffer=SB[k];s.loop=true;s.loopStart=SLOOP[k][0];s.loopEnd=SLOOP[k][1];s.connect(g2);s.start(0,SLOOP[k][0]);
  g2.gain.setTargetAtTime(SLV[k],c.currentTime,.04);return{g:g2,stop:()=>{try{s.stop()}catch(e){}}}}
 ['pointerdown','touchend','click','keydown'].forEach(ev=>addEventListener(ev,aInit,{capture:true,passive:true}));
@@ -872,7 +876,10 @@ const SFX={
  click:()=>{osc('square',1250,900,.04,.05)}};
 const MINI={drill:.09,nail:.11,disc:.18,eshot:.14,gspit:.22,pop:.05,whip:.25,reflect:.05,drop:.1,tool:.08};
 const SYNTH=false,SAMPLED=['nail','disc','eshot','gspit','smash','bossDie'];
-function sfx(k){if(!SYNTH&&!SAMPLED.includes(k))return;if(!SND.ctx||SND.mode==2||!SFX[k]||SND.ctx.state!='running')return;const t=AT();if(MINI[k]&&t-(SND.last[k]||-9)<MINI[k])return;SND.last[k]=t;try{SFX[k]()}catch(e){}}
+function sfx(k){if(!SND.ctx||SND.mode==2||!SFX[k]||SND.ctx.state!='running')return;const t=AT();if(MINI[k]&&t-(SND.last[k]||-9)<MINI[k])return;SND.last[k]=t;
+ const m=SM[k];if(m&&smp(m[0],m[1],m[2]?.93+Math.random()*.14:1))return;
+ if(k=='warn'&&SB.warn){[0,.62,1.24,1.86].forEach(d=>smp('warn',.45,1,d));return}
+ if(!SYNTH&&!SAMPLED.includes(k))return;try{SFX[k]()}catch(e){}}
 /* continuous sounds: heat-gun beam hum, water-blast jet, argo-saw grind */
 const LOOPS={};
 function mkLoop(parts){const c=SND.ctx,g2=c.createGain();g2.gain.value=0;g2.connect(SND.sfx);const ns=[];
