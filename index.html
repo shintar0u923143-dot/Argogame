@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v50';
+const VER='v51';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -825,7 +825,7 @@ function aInit(){if(SND.ctx){if(SND.ctx.state=='suspended')SND.ctx.resume();retu
 /* game moment -> [file in assets/sfx, volume, random pitch] (Kenney CC0 packs + user's own recordings) */
 const SM={drill:['drill',.18,1],pop:['pop',.35,1],hurt:['hurt',.7],drop:['drop',.45],tool:['tool',.5],max:['max',.55],ready:['ready',.6],shield:['shield',.5],aid:['aid',.55],
  reflect:['reflect',.35,1],shockGet:['shockget',.5],shock:['shock',.9],boost:['boost',.6],sting:['sting',.6],swing:['swing',.5],roar:['roar',.9],fanfare:['fanfare',.6],
- start:['start',.55],over:['over',.6],whip:['whip',.7],arrest:['arrest',.6],slam:['slam',.9],click:['click',.4]};
+ start:['start',.55],over:['over',.6],whip:['whip',.7],arrest:['arrest',.6],slam:['slam',.9],click:['click',.4],horn:['horn',.4],train:['train',.6]};
 const SB={},SKEYS=['nail','eshot','gspit','hammer','bossdie','disc','hum','water','saw','warn',...new Set(Object.values(SM).map(m=>m[0]))],SLOOP={hum:[.1,3.1],water:[.1,3.1],saw:[.1,2.5]},SLV={hum:.16,water:.5,saw:.42};
 function sLoad(){for(const k of SKEYS)fetch('assets/sfx/'+k+'.mp3').then(r=>r.arrayBuffer()).then(b=>new Promise((ok,no)=>SND.ctx.decodeAudioData(b,ok,no))).then(buf=>{SB[k]=buf}).catch(()=>{})}
 function smp(k,vol,rate,dl){const b=SB[k];if(!b)return false;const c=SND.ctx,s=c.createBufferSource(),v=c.createGain();s.buffer=b;if(rate)s.playbackRate.value=rate;v.gain.value=vol;s.connect(v);v.connect(SND.sfx);s.start(c.currentTime+(dl||0));return true}
