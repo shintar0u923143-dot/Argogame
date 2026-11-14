@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v54';
+const VER='v55';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -924,7 +924,7 @@ function music(){if(!SYNTH){musicTrack();return}if(SND.mode!=0)return;const key=
   if(s%2==0&&s!=14){const n=r+12+S.pat[(s/2)%8];osc(S.lead,mf(n),mf(n),sp*1.7,key=='title'?.04:.03,dl,M)}
   mStep++;mT0+=sp}}
 function sndTick(){if(!SND.ctx||SND.ctx.state!='running')return;
- const t=AT(),MV=SYNTH?.3:.55,mv=SND.mode==0?(pause?MV*.3:DEMO?MV*.7:MV):0,fv=SND.mode==2?0:DEMO?.6:1;
+ const t=AT(),MV=SYNTH?.3:.85,mv=SND.mode==0?(pause?MV*.3:DEMO?MV*.7:MV):0,fv=SND.mode==2?0:DEMO?.6:1;
  SND.mus.gain.setTargetAtTime(mv,t,.15);SND.sfx.gain.setTargetAtTime(fv,t,.05);
  const sk=SK&&SK.t>.8&&SK.t<3.85&&!pause;loopSet('hum',st=='play'&&!pause&&P.beam&&!SK);loopSet('water',sk&&SK.k=='heat');loopSet('saw',sk&&SK.k=='disc');music()}
 function sndBtn(x,y){g.save();g.fillStyle='rgba(10,10,14,.6)';g.strokeStyle=SND.mode==2?'rgba(255,255,255,.4)':Y;g.lineWidth=2;g.beginPath();g.arc(x,y,16,0,7);g.fill();g.stroke();g.restore();em(SNDI[SND.mode],x,y+1,16)}
