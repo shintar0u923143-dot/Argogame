@@ -15,7 +15,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v49';
+const VER='v50';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -898,7 +898,18 @@ const MUS=[{bpm:128,root:45,prog:[0,0,5,7],lead:'square',pat:[0,7,12,7,3,7,10,7]
  {bpm:124,root:47,prog:[0,5,7,3],lead:'square',pat:[0,2,4,7,9,7,4,2]}],
  MBOSS={bpm:156,root:41,prog:[0,1,0,-2],lead:'sawtooth',pat:[0,12,0,10,0,7,0,6]},MTITLE={bpm:104,root:45,prog:[0,5,3,7],lead:'triangle',pat:[0,7,12,15,12,7,3,7]};
 let mT0=0,mStep=0;
-function music(){if(SND.mode!=0||!SYNTH)return;const key=DEMO||st=='play'||st=='over'?(st=='over'?'':(boss||warnT>0?'boss':'s'+stg())):'title';
+/* music tracks (Pixabay): one looping track per stage, played a little faster during boss fights; title screen uses the Roxas track */
+const MTR=['m_roxas','m_dry','m_rizal','m_pagoda'],MLP={m_roxas:[.1,55.0849],m_dry:[.1,63.7761],m_rizal:[.1,77.376],m_pagoda:[.1,95.952]},MBUF={},MLOAD={};let MCUR=null;
+function mLoad(t){if(MBUF[t]||MLOAD[t])return;MLOAD[t]=1;fetch('assets/music/'+t+'.mp3').then(r=>r.arrayBuffer()).then(b=>new Promise((ok,no)=>SND.ctx.decodeAudioData(b,ok,no))).then(buf=>{MBUF[t]=buf;for(const k in MBUF)if(k!=t&&(!MCUR||k!=MCUR.t))delete MBUF[k]}).catch(()=>{}).finally(()=>{delete MLOAD[t]})}
+function mStop(){if(!MCUR)return;const m=MCUR;MCUR=null;m.g.gain.setTargetAtTime(0,AT(),.25);setTimeout(()=>{try{m.s.stop()}catch(e){}},1500)}
+function musicTrack(){if(SND.mode!=0){mStop();return}
+ const want=st=='over'?'':(DEMO||st=='play')?MTR[stg()%MTR.length]:MTR[0];
+ if(!want){mStop();return}
+ if(!MCUR||MCUR.t!=want){if(!MBUF[want]){mLoad(want);if(MCUR&&MCUR.t!=want)mStop();return}
+  mStop();const c=SND.ctx,src=c.createBufferSource(),g2=c.createGain();src.buffer=MBUF[want];src.loop=true;src.loopStart=MLP[want][0];src.loopEnd=MLP[want][1];
+  g2.gain.value=0;g2.gain.setTargetAtTime(1,c.currentTime,.4);src.connect(g2);g2.connect(SND.mus);src.start(0,MLP[want][0]);MCUR={t:want,s:src,g:g2}}
+ MCUR.s.playbackRate.setTargetAtTime((boss||warnT>0)&&st=='play'?1.07:1,AT(),.5)}
+function music(){if(!SYNTH){musicTrack();return}if(SND.mode!=0)return;const key=DEMO||st=='play'||st=='over'?(st=='over'?'':(boss||warnT>0?'boss':'s'+stg())):'title';
  if(key!=SND.key){SND.key=key;mStep=0;mT0=AT()+.08}if(!key)return;
  const S=key=='boss'?MBOSS:key=='title'?MTITLE:MUS[stg()%MUS.length],sp=60/S.bpm/4,M=SND.mus;
  while(mT0<AT()+.2){const s=mStep%16,ch=S.prog[(mStep>>4)%4],dl=mT0-AT(),r=S.root+ch;
@@ -909,7 +920,7 @@ function music(){if(SND.mode!=0||!SYNTH)return;const key=DEMO||st=='play'||st=='
   if(s%2==0&&s!=14){const n=r+12+S.pat[(s/2)%8];osc(S.lead,mf(n),mf(n),sp*1.7,key=='title'?.04:.03,dl,M)}
   mStep++;mT0+=sp}}
 function sndTick(){if(!SND.ctx||SND.ctx.state!='running')return;
- const t=AT(),mv=SND.mode==0?(pause?.1:DEMO?.22:.3):0,fv=SND.mode==2?0:DEMO?.6:1;
+ const t=AT(),MV=SYNTH?.3:.55,mv=SND.mode==0?(pause?MV*.3:DEMO?MV*.7:MV):0,fv=SND.mode==2?0:DEMO?.6:1;
  SND.mus.gain.setTargetAtTime(mv,t,.15);SND.sfx.gain.setTargetAtTime(fv,t,.05);
  const sk=SK&&SK.t>.8&&SK.t<3.85&&!pause;loopSet('hum',st=='play'&&!pause&&P.beam&&!SK);loopSet('water',sk&&SK.k=='heat');loopSet('saw',sk&&SK.k=='disc');music()}
 function sndBtn(x,y){g.save();g.fillStyle='rgba(10,10,14,.6)';g.strokeStyle=SND.mode==2?'rgba(255,255,255,.4)':Y;g.lineWidth=2;g.beginPath();g.arc(x,y,16,0,7);g.fill();g.stroke();g.restore();em(SNDI[SND.mode],x,y+1,16)}
