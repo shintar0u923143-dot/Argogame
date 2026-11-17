@@ -18,7 +18,8 @@ catch (e) { renderer = null; }
 
 const scene = new THREE.Scene();
 const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
-cam.position.set(0, -8.2, 7.6); cam.lookAt(0, 0.1, 0);     // high-angle view from behind the rig
+const CAM_G = new THREE.Vector3(0, -8.2, 7.6), CAM_S = new THREE.Vector3(0, -8.6, 2.6), LOOK_G = new THREE.Vector3(0, .1, 0), LOOK_S = new THREE.Vector3(0, .1, .25), _look = new THREE.Vector3();
+cam.position.copy(CAM_G); cam.lookAt(LOOK_G);     // high-angle view from behind the rig (CAM_S = low showcase angle for the entrance)
 if (renderer) {
   renderer.setPixelRatio(1); renderer.setSize(PX, PX, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
@@ -79,6 +80,20 @@ part(roundBox(1.25, 2.1, .62, .16), M.red, body, [0, -.25, 0]);
 part(roundBox(1.32, .55, .7, .12), M.black, body, [0, -1.05, 0]);                           // battery latch block
 part(new THREE.BoxGeometry(1.33, .09, .5), M.yel, body, [0, -.72, 0], null, false);           // yellow stripe
 const plate = part(new THREE.PlaneGeometry(1.0, .25), new THREE.MeshStandardMaterial({ map: logoTex(), roughness: .4 }), body, [0, -1.05, .36], null, false);
+/* ARGOPOWER logo decals (the real logo art on a white badge) on the hull top and both sides */
+const decalTex = (() => { const c = document.createElement('canvas'); c.width = 512; c.height = 128; const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  const x = c.getContext('2d'), paint = img => { x.clearRect(0, 0, 512, 128); x.fillStyle = '#fff'; x.strokeStyle = '#e1251b'; x.lineWidth = 8; x.beginPath();
+    if (x.roundRect) x.roundRect(6, 6, 500, 116, 22); else x.rect(6, 6, 500, 116); x.fill(); x.stroke();
+    if (img) x.drawImage(img, 30, 16, 452, 96); else { x.font = 'bold 72px Arial Narrow, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#e1251b'; x.fillText('ARGOPOWER', 256, 68); } t.needsUpdate = true; };
+  paint(null); const im = new Image(); im.onload = () => paint(im); im.src = new URL('../logo.webp', import.meta.url).href; return t; })();
+const decalMat = new THREE.MeshStandardMaterial({ map: decalTex, emissiveMap: decalTex, emissive: 0xffffff, emissiveIntensity: 0, roughness: .35, transparent: true, polygonOffset: true, polygonOffsetFactor: -2 });
+// racing spoiler across the back: its slanted top carries the big logo, seen from above in play and from behind in the showcase
+const spoiler = new THREE.Group(); spoiler.position.set(0, -1.32, .95); spoiler.rotation.x = .62; body.add(spoiler);
+part(roundBox(2.3, .62, .1, .04), M.black, spoiler, [0, 0, 0]);
+part(new THREE.BoxGeometry(2.34, .07, .12), M.yel, spoiler, [0, .31, 0], null, false);
+part(new THREE.PlaneGeometry(2.1, .5), decalMat, spoiler, [0, -.02, .056], null, false);
+for (const sx of [-1, 1]) { part(new THREE.BoxGeometry(.1, .14, .62), M.black, body, [sx * .42, -1.3, .62], [-.25, 0, 0]);
+  part(new THREE.BoxGeometry(.05, .62, .3), M.red, spoiler, [sx * 1.17, 0, -.12]); }   // end plates
 // motor housing + chuck (nose)
 part(new THREE.CylinderGeometry(.42, .5, 1.1, 24), M.black, body, [0, 1.2, .05]);
 const nose = new THREE.Group(); nose.position.set(0, 1.72, .05); body.add(nose);
@@ -152,7 +167,10 @@ function update(s) {
   const w = s.weapon || 'drill'; if (lastW && w !== lastW) barrel = 0; lastW = w;          // barrel roll when the tool changes
   barrel = Math.min(1, barrel + dt * 1.9); const br = barrel < 1 ? (1 - Math.pow(1 - barrel, 3)) * Math.PI * 2 : 0;
   const intro = s.intro || 0;                                                                // fly-in: nose up, full thrust
-  root.rotation.set(-pitch - intro * .5, roll * .55 + br, -(s.tilt || 0) * .35);
+  const cine = s.cine || 0;                                                                   // entrance showcase: low camera + turntable spin
+  cam.position.lerpVectors(CAM_G, CAM_S, cine); _look.lerpVectors(LOOK_G, LOOK_S, cine); cam.lookAt(_look);
+  decalMat.emissiveIntensity = (s.shine || 0) * .9;
+  root.rotation.set(-pitch - intro * .5, roll * .55 + br, -(s.tilt || 0) * .35 + (s.spin || 0));
   root.position.z = Math.sin(t * 5.5) * .07; root.position.x = Math.sin(t * 2.3) * .03;
   pilot.rotation.y = roll * .25; head.rotation.z = (s.tilt || 0) * .3;
   const fem = s.sex === 'f'; ponytail.visible = fem; ponytail.rotation.x = -.3 + Math.sin(t * 9) * .12 - pitch * .6; ponytail.rotation.z = -roll * .4;

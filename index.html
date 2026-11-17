@@ -38,7 +38,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v57';
+const VER='v58';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -52,7 +52,7 @@ function sprK(k,x,y,s,fl){const i=IM[k],w=i.naturalWidth*s,h=i.naturalHeight*s;g
 function spr(k,x,y,h,rot,mw){const i=IM[k];let w=h*i.naturalWidth/i.naturalHeight;if(mw&&w>mw){w=mw;h=w*i.naturalHeight/i.naturalWidth}g.save();g.translate(x,y);if(rot)g.rotate(rot);g.drawImage(i,-w/2,-h/2,w,h);g.restore()}
 function go(){const v=nmEl.value.trim().replace(/[<>&"']/g,'').slice(0,12);
  if(v.length<2){nmMsg='Enter your name (at least 2 letters)';nmT=2.5;nmEl.focus();return}
- pname=v;try{localStorage.setItem('ap_name',v)}catch(e){}nmEl.blur();sfx('start');init();rigIn=1}
+ pname=v;try{localStorage.setItem('ap_name',v)}catch(e){}nmEl.blur();sfx('start');init();if(rigOn()){cineT=CINE;cineB=0;bannerT=0}else rigIn=1}
 const lbGet=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return[]}};
 function localAdd(){const a=lbGet('ap_local');a.push({n:pname,s:score});a.sort((x,y)=>y.s-x.s);try{localStorage.setItem('ap_local',JSON.stringify(a.slice(0,100)))}catch(e){}}
 function submit(){subMsg='';if(!API_URL){localAdd();subMsg='Saved on this device';return}
@@ -147,6 +147,7 @@ function init(){P=mkP();P.inv=1.5;B=[];E=[];X=[];U=[];F=[];O=[];score=0;tm=0;spT
 function pt(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left-ox)/sc,(e.clientY-r.top-oy)/sc]}
 cv.addEventListener('pointerdown',e=>{idleT=0;if(DEMO){exitSaver();return}const[x,y]=pt(e);tch=true;
  if(howInst){howInst=false;return}
+ if(st=='play'&&cineT>0){const a=CINE-cineT;if(a<2.4)cineT=CINE-2.4;return}
  if(pause&&st=='play'){if(x>90&&x<270&&y>290&&y<338)pause=false;else if(x>90&&x<270&&y>350&&y<392)quit();else if(x>90&&x<270&&y>402&&y<442)sndCycle();return}
  if(st=='play'&&Math.hypot(x-PBX,y-PBY)<24){pause=true;tch=false;return}
  if(st=='title'&&Math.hypot(x-(W-26),y-26)<22){sndCycle();return}
@@ -545,6 +546,26 @@ function shield(x,y,k){const left=P.t[k];if(left<1.5&&((tm*12)|0)%2)return;const
 /* 3D Hover-Rig (assets/3d/rig.js). Falls back to the 2D hero art if WebGL is unavailable. */
 let rigSlow=0;try{rigSlow=+localStorage.getItem('ap_rig2d')||0}catch(e){}
 /* if a phone renders the 3D rig too slowly, switch to the 2D hero automatically (remembered on this device) */
+/* ===== ENTRANCE: low-angle showcase of the Hover-Rig (turntable spin, ARGOPOWER logo flash), then it dives into position. Tap to skip. ===== */
+const CINE=3.6;let cineT=0,cineB=0;
+const cEase=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function cineUpd(dt){const a=CINE-cineT;cineT-=dt;if(!cineB&&a>=2.55){cineB=1;sfx('boost');shake=.25}if(cineT<=0){cineT=0;bannerT=3.2;flash=.35}}
+function cineDraw(){const a=CINE-cineT,DV=2.55,dive=Math.max(0,Math.min(1,(a-DV)/(CINE-DV))),e=cEase(dive),fade=Math.min(1,a/.35);
+ // dim the street and throw a spotlight + rotating rays behind the rig
+ g.save();g.globalAlpha=(1-e)*.78;g.fillStyle='#07070a';g.fillRect(0,0,W,H);g.globalAlpha=1;
+ const cx=W/2+(P.x-W/2)*e,cy=300+(P.y-300)*e,sz=300+(118-300)*e;
+ if(e<1){g.globalCompositeOperation='lighter';g.globalAlpha=(1-e)*fade*.55;g.translate(W/2,300);g.rotate(a*.35);
+  for(let i=0;i<12;i++){g.rotate(Math.PI/6);g.fillStyle=i%2?'rgba(225,37,27,.5)':'rgba(245,184,0,.45)';g.beginPath();g.moveTo(0,0);g.lineTo(-40,-420);g.lineTo(40,-420);g.fill()}
+  g.restore();g.save();g.globalCompositeOperation='lighter';glow('helm',W/2,300,170*(1-e),.5*fade*(1-e))}
+ g.restore();g.globalAlpha=1;
+ // the rig: spins a full turn to show the logo, the logo flashes, then it dives to the start position
+ const sp=-Math.PI*2*(1-cEase(Math.min(1,a/2.3))),shine=Math.max(0,1-Math.abs(a-2.05)/.35);
+ g.save();g.globalAlpha=fade;RIG.draw(g,cx,cy,sz,{sex,cine:1-e,spin:sp,shine,weapon:P.wp,boost:dive>0&&dive<1,charge:Math.min(5,Math.floor(a*2.2)),dt:1/60},sz*sc*dpr);g.restore();
+ if(shine>.6&&e==0){g.save();g.globalCompositeOperation='lighter';glow('white',cx,cy+40,60,shine*.6);g.restore()}
+ // captions
+ if(e<.6){const ta=Math.min(1,(a-.4)/.4)*(1-e/.6);if(ta>0){g.globalAlpha=ta;tt('ARGOPOWER HOVER-RIG',W/2,470,22,Y,'center',4);tt('OPERATOR: '+(pname||'PLAYER').toUpperCase(),W/2,498,14,'#fff','center',3);
+  if(a>1.9)tt('BASTA ARGO, POWER!',W/2,530,18,R,'center',4);g.globalAlpha=1}
+  g.globalAlpha=.6*(1-e);tt('TAP TO SKIP',W/2,612,11,'#ddd','center',2);g.globalAlpha=1}}
 const rigOn=()=>{if(!window.RIG||!RIG.ok||rigSlow)return false;if(RIG.ms>14&&tm>8){rigSlow=1;try{localStorage.setItem('ap_rig2d','1')}catch(e){}return false}return true};let rigIn=0,rigHit=0;
 function hero3d(x,y,s,size,st8){const a=g.globalAlpha;g.save();if(rigHit>0&&((tm*20)|0)%2)g.globalAlpha=a*.45;RIG.draw(g,x,y,size,st8,size*sc*dpr);g.restore()}
 function hero(x,y,s,inv,md,tilt,fly){
@@ -797,7 +818,7 @@ function draw(){if(st=='play'){if(shake>0)g.translate((Math.random()-.5)*12*shak
   if(s.rf){g.save();g.shadowColor='#ffd21f';g.shadowBlur=10}
   if(ok(q[0])){spr(q[0],s.x,s.y,q[1],s.k=='coin'||s.k=='bottle'||s.k=='rock'?tm*7:Math.atan2(s.vy,s.vx)+(s.k=='spit'||s.k=='venom'||s.k=='missile'||s.k=='badorb'||s.k=='sludge'||s.k=='rbolt'?Math.PI/2:-Math.PI/2))}else if(s.k=='missile'){g.save();g.translate(s.x,s.y);g.rotate(Math.atan2(s.vy,s.vx)-Math.PI/2);g.fillStyle='#ff9a1f';g.beginPath();g.moveTo(-3,-9);g.lineTo(0,-16-Math.random()*6);g.lineTo(3,-9);g.fill();g.fillStyle=q[2];g.fillRect(-3.5,-9,7,18);g.fillStyle=R;g.beginPath();g.moveTo(-3.5,9);g.lineTo(0,15);g.lineTo(3.5,9);g.fill();g.restore()}else{g.fillStyle=q[2];g.beginPath();if(s.k=='laser')g.ellipse(s.x,s.y,3,9,Math.atan2(s.vy,s.vx)-Math.PI/2,0,7);else g.arc(s.x,s.y,5,0,7);g.fill()}
   if(s.rf)g.restore()}
- if(st=='play'||st=='over'){const md=sMode();if(st=='play'){const y=P.y+Math.sin(tm*6)*2;if(P.boost>0){for(let i=1;i<=4;i++){g.globalAlpha=.2*(5-i)/4;if(rigOn())RIG.blit(g,P.x,y+i*18,118);else hero(P.x,y+i*18,sex,0,md,P.tilt,0)}g.globalAlpha=1;drawFx(1);aura(P.x,y)}for(const k of['eye','glove','helm','aid'])if(P.t[k]>0)shield(P.x,y,k);rigHit=P.inv;hero(P.x,y+(rigIn>0?rigIn*rigIn*260:0),sex,P.inv,md,P.tilt,1)}}
+ if(st=='play'||st=='over'){const md=sMode();if(st=='play'){const y=P.y+Math.sin(tm*6)*2;if(P.boost>0){for(let i=1;i<=4;i++){g.globalAlpha=.2*(5-i)/4;if(rigOn())RIG.blit(g,P.x,y+i*18,118);else hero(P.x,y+i*18,sex,0,md,P.tilt,0)}g.globalAlpha=1;drawFx(1);aura(P.x,y)}for(const k of['eye','glove','helm','aid'])if(P.t[k]>0)shield(P.x,y,k);rigHit=P.inv;if(cineT<=0)hero(P.x,y+(rigIn>0?rigIn*rigIn*260:0),sex,P.inv,md,P.tilt,1)}}
  g.save();g.globalCompositeOperation='lighter';for(const f of F){g.globalAlpha=Math.min(1,f.l*2);g.fillStyle=f.c;g.beginPath();g.arc(f.x,f.y,2.6,0,7);g.fill()}g.restore();g.globalAlpha=1;drawFx(0);
  for(const q of T){g.globalAlpha=Math.min(1,q.l*2);tt(q.s,q.x,q.y,15,q.c,'center',4)}g.globalAlpha=1;
  if(st=='play')drawSkill();
@@ -1001,8 +1022,8 @@ function loop(n){const dt=Math.min(.05,(n-last)/1000||0);last=n;
  g.setTransform(dpr,0,0,dpr,0,0);g.fillStyle='#000';g.fillRect(0,0,innerWidth,innerHeight);
  g.setTransform(dpr*sc,0,0,dpr*sc,dpr*ox,dpr*oy);g.save();g.beginPath();g.rect(0,0,W,H);g.clip();
  if(!pause)bgS+=(st=='play'?BV:40)*dt;
- if(st=='play'){if(!pause){upd(dt);if(rigIn>0)rigIn=Math.max(0,rigIn-dt*1.1)}}else{tm+=dt;if(st=='over')ov+=dt}
- nmEl.style.display=st=='title'&&!howInst?'block':'none';if(nmT>0)nmT-=dt;draw();g.restore();requestAnimationFrame(loop)}
+ if(st=='play'){if(!pause){if(cineT>0)cineUpd(dt);else{upd(dt);if(rigIn>0)rigIn=Math.max(0,rigIn-dt*1.1)}}}else{tm+=dt;if(st=='over')ov+=dt}
+ nmEl.style.display=st=='title'&&!howInst?'block':'none';if(nmT>0)nmT-=dt;draw();if(st=='play'&&cineT>0)cineDraw();g.restore();requestAnimationFrame(loop)}
 P=mkP();
 requestAnimationFrame(loop);
 
