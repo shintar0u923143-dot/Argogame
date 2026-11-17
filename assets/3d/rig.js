@@ -353,22 +353,18 @@ function poseSkill(k, t, I) {
     at(g, lerp(470, tx, a) + o * 320, lerp(-180, ty, a) - o * 420, 0);
     g.rotation.set(.75 - (1 - a) * .6, -.35, -.25 + (1 - a) * 1.2 + Math.sin((t - .8) * 2.4) * .1);
     g.disc.rotation.y = -t * 60; I.cx = tx - 52; I.cy = ty + 58; }
-  else if (k === 'hammer') {   // side view, like a real hammer blow: raised behind, swings over, the round striking face lands DOWN on the boss at 1.3   (end 2.6)
-    const W0 = I.W || 360, right = bx < W0 / 2, room = right ? W0 - 12 - bx : bx - 12;
-    const s = clamp(room / 4.4, 30, 52), dir = right ? 1 : -1;
-    const piv = { x: bx + dir * 4.25 * s, y: by + 26 - 1.15 * s };
-    // wind-up below the boss leaning back, then a big overhead swing that lands with the handle level and the face down
-    const H0 = I.H || 640, gw = { x: clamp(bx + dir * 30, 80, W0 - 80), y: Math.min(H0 - 230, by + 340) };
-    let th, gx = gw.x, gy = gw.y, sc = s * 1.15;
-    if (t < .3) { th = -.2; sc = s * 1.15 * ez(t / .3); gy += (1 - ez(t / .3)) * 120; }
-    else if (t < 1.05) { th = -.2 - (t - .3) * .25 + Math.sin(t * 45) * .02 * (t - .3); }
-    else if (t < 1.3) { const k = ezIn((t - 1.05) / .25); th = lerp(-.39, Math.PI / 2, k); gx = lerp(gw.x, piv.x, k); gy = lerp(gw.y, piv.y, k); sc = lerp(s * 1.15, s, k); }
-    else { const q = t - 1.3; th = Math.PI / 2 - Math.max(0, Math.sin(Math.min(q, .3) / .3 * Math.PI)) * .12; gx = piv.x; gy = piv.y; sc = s; if (q > .85) sc = s * (1 - ez((q - .85) / .45)); }
-    g.scale.setScalar(Math.max(.001, sc)); at(g, gx, gy, 0);
-    g.rotation.set(0, 0, 0); g.rotateZ(th * dir); if (!right) g.rotateY(Math.PI); g.rotateX(.18);
+  else if (k === 'hammer') {   // rises out of the screen toward you crackling with power, then slams down flat onto the boss at 1.3   (end 2.6)
+    const piv = { x: bx + 10, y: by + 270 }, dx = bx - piv.x, dy = by - piv.y, L = Math.hypot(dx, dy), s = L / 4.25;
+    const rz = Math.atan2(-dx, -dy);   // in-plane direction from the grip to the boss
+    let lift, sc = s, twist = 0;
+    if (t < .3) { lift = 1.0; sc = s * ez(t / .3); twist = (1 - ez(t / .3)) * 3; }
+    else if (t < 1.05) { lift = 1.0 + (t - .3) * .3 + Math.sin(t * 40) * .02; twist = Math.sin(t * 3) * .25; }
+    else if (t < 1.3) { lift = lerp(1.22, 0, ezIn((t - 1.05) / .25)); }
+    else { const q = t - 1.3; lift = Math.max(0, Math.sin(Math.min(q, .35) / .35 * Math.PI) * .18); if (q > .85) sc = s * (1 - ez((q - .85) / .45)); }
+    g.scale.setScalar(Math.max(.001, sc)); at(g, piv.x, piv.y, 0);
+    g.rotation.set(0, 0, 0); g.rotateZ(-rz); g.rotateX(lift); g.rotateY(twist);
     const hot = t < 1.3 ? .6 + .4 * Math.sin(t * 30) : Math.max(0, 1 - (t - 1.3) * 1.5);
-    g.aura.material.opacity = hot * .9; g.aura.scale.setScalar(4 + hot * 4);
-    I.hx = bx; I.hy = by; }
+    M.strip.color.setHSL(.14, 1, .55 + hot * .3); g.aura.material.opacity = hot * .9; g.aura.scale.setScalar(4 + hot * 4); }
   else {   // VOLTAGE OVERLOAD: slides in pointing at the boss, charges up (neon glows, shakes), overload blast at 2.7   (end 3.6)
     const s = 42; g.scale.setScalar(s);
     let ux = bx - 70, uy = by - 600; const ul = Math.hypot(ux, uy); ux /= ul; uy /= ul;
