@@ -3,8 +3,31 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#e1251b"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="assets/icon-192.png"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"><meta name="mobile-web-app-capable" content="yes">
 <title>ARGOPOWER Tool Blaster</title>
-<style>@font-face{font-family:Oswald;font-weight:500;font-display:swap;src:url(assets/oswald-latin-500-normal.woff2) format('woff2')}@font-face{font-family:Oswald;font-weight:600;font-display:swap;src:url(assets/oswald-latin-600-normal.woff2) format('woff2')}html,body{margin:0;height:100%;background:#000;overflow:hidden;touch-action:none;overscroll-behavior:none}canvas{position:absolute;inset:0;width:100%;height:100%;display:block}#nm{position:absolute;display:none;box-sizing:border-box;text-align:center;font:500 16px Oswald,'Arial Narrow',sans-serif;border:3px solid #f5b800;border-radius:8px;background:#17171b;color:#fff;outline:none;z-index:2;padding:0}</style>
-</head><body><canvas id="c"></canvas><input id="nm" maxlength="12" placeholder="ENTER YOUR NAME" autocomplete="nickname" enterkeyhint="go"><script src="config.js"></script><script>
+<style>@font-face{font-family:Oswald;font-weight:500;font-display:swap;src:url(assets/oswald-latin-500-normal.woff2) format('woff2')}@font-face{font-family:Oswald;font-weight:600;font-display:swap;src:url(assets/oswald-latin-600-normal.woff2) format('woff2')}html,body{margin:0;height:100%;background:#000;overflow:hidden;touch-action:none;overscroll-behavior:none}canvas{position:absolute;inset:0;width:100%;height:100%;display:block}#nm{position:absolute;display:none;box-sizing:border-box;text-align:center;font:500 16px Oswald,'Arial Narrow',sans-serif;border:3px solid #f5b800;border-radius:8px;background:#17171b;color:#fff;outline:none;z-index:2;padding:0}#promo{position:fixed;inset:0;z-index:5;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);font-family:Oswald,'Arial Narrow',sans-serif}
+#promo.on{display:flex}#promo form{box-sizing:border-box;width:min(94vw,400px);max-height:94vh;overflow:auto;background:#17171b;border:3px solid #f5b800;border-radius:14px;padding:16px 16px 14px;color:#f2f2f2}
+#promo h2{margin:0 0 4px;color:#f5b800;font-size:22px;letter-spacing:.5px}#promo p{margin:0 0 10px;font-size:14px;line-height:1.35;color:#ddd}
+#promo .draft{background:#e1251b;color:#fff;font-size:12px;text-align:center;border-radius:6px;padding:3px 6px;margin-bottom:8px}
+#promo label.f{display:block;font-size:13px;margin:8px 0 3px;color:#f5b800}#promo input[type=text],#promo input[type=email],#promo input[type=tel]{box-sizing:border-box;width:100%;font:500 16px Oswald,'Arial Narrow',sans-serif;padding:8px 10px;border-radius:8px;border:2px solid #555;background:#000;color:#fff;outline:none}
+#promo input:focus{border-color:#f5b800}#promo label.chk{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.35;margin:10px 0 0;color:#eee}
+#promo label.chk input{width:20px;height:20px;flex:none;margin:1px 0 0;accent-color:#e1251b}#promo details{margin:10px 0 0;font-size:12.5px;line-height:1.45;color:#ccc}
+#promo summary{color:#f5b800;cursor:pointer;font-size:13px}#promo details p{font-size:12.5px;margin:6px 0}#promo .msg{min-height:18px;margin:10px 0 6px;font-size:14px;color:#ffd21f;text-align:center}
+#promo .row{display:flex;gap:8px}#promo button{flex:1;font:600 16px Oswald,'Arial Narrow',sans-serif;border-radius:10px;padding:11px 8px;border:0;cursor:pointer}
+#promo .go{background:#e1251b;color:#fff}#promo .go:disabled{opacity:.45}#promo .no{background:#33333a;color:#ddd}
+</style>
+</head><body><canvas id="c"></canvas>
+<div id="promo" role="dialog" aria-modal="true" aria-labelledby="pf_t"><form id="pf" novalidate autocomplete="on">
+ <div class="draft" id="pf_draft">DRAFT PREVIEW: for Marketing / DPO review only</div>
+ <h2 id="pf_t">🎁 ArgoPower Promos &amp; Events</h2>
+ <p>Be the first to know about ArgoPower promos, new tools and events. This is optional, and you can unsubscribe anytime.</p>
+ <label class="f" for="pf_name">Full name</label><input type="text" id="pf_name" autocomplete="name" maxlength="60">
+ <label class="f" for="pf_email">Email address</label><input type="email" id="pf_email" autocomplete="email" maxlength="80" inputmode="email">
+ <label class="f" for="pf_mob">Mobile number</label><input type="tel" id="pf_mob" autocomplete="tel" inputmode="tel" maxlength="16" placeholder="09XX XXX XXXX">
+ <label class="chk"><input type="checkbox" id="pf_ok"><span id="pf_oktxt"></span></label>
+ <label class="chk"><input type="checkbox" id="pf_age"><span>I am 18 years old or above.</span></label>
+ <details><summary>Read the Privacy Notice</summary><div id="pf_notice"></div></details>
+ <div class="msg" id="pf_msg" aria-live="polite"></div>
+ <div class="row"><button type="button" class="no" id="pf_no">No thanks</button><button type="submit" class="go" id="pf_go">SIGN ME UP</button></div>
+</form></div><input id="nm" maxlength="12" placeholder="ENTER YOUR NAME" autocomplete="nickname" enterkeyhint="go"><script src="config.js"></script><script>
 'use strict';
 const cv=document.getElementById('c'),g=cv.getContext('2d'),W=360,H=640,R='#e1251b',Y='#f5b800',K='#17171b';
 const nmEl=document.getElementById('nm');let sc=1,ox=0,oy=0,dpr=1;
@@ -15,14 +38,14 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v55';
+const VER='v56';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
 if(!did){did=Math.random().toString(36).slice(2,12);try{localStorage.setItem('ap_did',did)}catch(e){}}
 nmEl.value=pname;
 const IM={};
-['gm1','gm2','gm3','gm4','scar1','scar2','scar3','scar4','kamote1','kamote2','budol1','budol2','budol3','kamote3','scar5','scar6','scar7','jail1','jail2','sludge','bottle','rbolt','car1','car2','car3','car4','corp1','corp2','corp3','corp4','snatch1','snatch2','snatch3','n_lamp','n_lanterns','n_tail','n_tailw','n_whip','badorb','badcoin','ui_panel','ui_btn_red','ui_btn_dark','ui_row','ui_medal1','ui_medal2','ui_medal3','ui_pod1','ui_pod2','ui_pod3','ui_crown','m','f','m_eye','m_glove','m_helm','f_eye','f_glove','f_helm','bee1','bee2','ant1','ant2','drone1','drone2','boss1','boss2','boss3','ob1a','ob1b','ob2a','ob2b','ob3a','ob3b','bg1','bg2','bg3','heat','nail','disc','glove','helm','eye','pdisc','sting','spit','dlaser','bolt','logo','bomb','missile','fx_jet','antw1','antw2','antw3','antw4','sc1','sc2','sc3','sc4','wm1','wm2','wm3','wm4','venom','rock','c_train','fx_splash','sk_water','sk_saw','sk_hammer','sk_blade','skb_water','skb_saw','skb_hammer','pu_aid','shock','fx_shock','ui_pause','aura1','aura2','aura3','aura4','orb','pu_heat','pu_nail','pu_disc','pu_eye','pu_glove','pu_helm','fx_boom1','fx_boom2','fx_boom3','fx_boom4'].forEach(k=>{const i=new Image();i.src='assets/'+k+(k.slice(0,2)=='bg'?'.jpg':'.png');IM[k]=i});
+['gm1','gm2','gm3','gm4','scar1','scar2','scar3','scar4','kamote1','kamote2','budol1','budol2','budol3','kamote3','scar5','scar6','scar7','jail1','jail2','sludge','bottle','rbolt','car1','car2','car3','car4','corp1','corp2','corp3','corp4','snatch1','snatch2','snatch3','n_lamp','n_lanterns','n_tail','n_tailw','n_whip','badorb','badcoin','ui_panel','ui_btn_red','ui_btn_dark','ui_row','ui_medal1','ui_medal2','ui_medal3','ui_pod1','ui_pod2','ui_pod3','ui_crown','m','f','m_eye','m_glove','m_helm','f_eye','f_glove','f_helm','bee1','bee2','ant1','ant2','drone1','drone2','boss1','boss2','boss3','ob1a','ob1b','ob2a','ob2b','ob3a','ob3b','bg1','bg2','bg3','heat','nail','disc','glove','helm','eye','pdisc','sting','spit','dlaser','bolt','logo','bomb','missile','fx_jet','antw1','antw2','antw3','antw4','sc1','sc2','sc3','sc4','wm1','wm2','wm3','wm4','venom','rock','c_train','fx_splash','sk_water','sk_saw','sk_hammer','sk_blade','skb_water','skb_saw','skb_hammer','pu_aid','shock','fx_shock','ui_pause','aura1','aura2','aura3','aura4','orb','pu_heat','pu_nail','pu_disc','pu_eye','pu_glove','pu_helm','fx_boom1','fx_boom2','fx_boom3','fx_boom4'].forEach(k=>{const i=new Image();i.src='assets/'+k+(k.slice(0,2)=='bg'?'.jpg':'.webp');IM[k]=i});
 const SOLIDBG={};function bgCheck(k){const i=IM[k];if(!i||!i.naturalWidth)return true;if(SOLIDBG[k]===undefined){try{const c=document.createElement('canvas');c.width=c.height=8;const x=c.getContext('2d');x.drawImage(i,0,0,8,8);SOLIDBG[k]=x.getImageData(0,0,1,1).data[3]>200}catch(e){SOLIDBG[k]=false}}return SOLIDBG[k]}
 const ok=k=>IM[k]&&IM[k].complete&&IM[k].naturalWidth;
 function sprK(k,x,y,s,fl){const i=IM[k],w=i.naturalWidth*s,h=i.naturalHeight*s;g.save();g.translate(x,y);if(fl)g.scale(-1,1);g.drawImage(i,-w/2,-h/2,w,h);g.restore()}
@@ -34,7 +57,42 @@ const lbGet=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){retu
 function localAdd(){const a=lbGet('ap_local');a.push({n:pname,s:score});a.sort((x,y)=>y.s-x.s);try{localStorage.setItem('ap_local',JSON.stringify(a.slice(0,100)))}catch(e){}}
 function submit(){subMsg='';if(!API_URL){localAdd();subMsg='Saved on this device';return}
  subMsg='Submitting…';const body=JSON.stringify({name:pname,did,score,secs:Math.round(tm)});
- const send=n=>fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body}).then(r=>r.json()).then(j=>{subMsg=j.ok?'Submitted! Your rank: #'+j.rank:(j.err||'Could not submit')}).catch(()=>{if(n<2){subMsg='Retrying…';setTimeout(()=>send(n+1),3000)}else subMsg='Offline: score not sent'});send(0)}
+ const send=n=>fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body}).then(r=>r.json()).then(j=>{if(!j.ok&&/busy|server/i.test(j.err||'')&&n<4){subMsg='Server busy, retrying…';setTimeout(()=>send(n+1),1500+Math.random()*3000);return}subMsg=j.ok?'Submitted! Your rank: #'+j.rank:(j.err||'Could not submit')}).catch(()=>{if(n<2){subMsg='Retrying…';setTimeout(()=>send(n+1),3000)}else subMsg='Offline: score not sent'});send(0)}
+/* ===== PROMO SIGN-UP (optional, consent-based, Data Privacy Act of 2012) =====
+   PROMO_ON=false keeps it hidden from the public; add ?promo=1 to the game link to preview it.
+   Fill in the [bracketed] items in PRIV after the DPO / Legal review, then set PROMO_ON=true. */
+const PROMO_ON=false,PROMO_PREVIEW=/[?&]promo=1/.test(location.search),
+ PRIV={company:'Co Ban Kiat Hardware, Inc. (CBK)',brand:'ArgoPower',dpo:'[DPO email address]',keep:'[2 years]',policy:'[link to CBK privacy policy]'},
+ CONSENT_VER='2026-11-draft1',
+ CONSENT_TXT=`I agree to receive promos, product news and event invitations from ${PRIV.company} / ${PRIV.brand} by email, SMS or phone call. I can unsubscribe anytime.`;
+const promoOn=()=>PROMO_ON||PROMO_PREVIEW;let joined=false;try{joined=!!localStorage.getItem('ap_joined')}catch(e){}
+const pfE=id=>document.getElementById(id);
+pfE('pf_oktxt').textContent=CONSENT_TXT;pfE('pf_draft').style.display=PROMO_ON?'none':'block';
+pfE('pf_notice').innerHTML=`<p><b>Who we are.</b> ${PRIV.company}, maker of ${PRIV.brand} power tools, is the personal information controller for this sign-up.</p>
+<p><b>What we collect.</b> Your full name, email address and mobile number, the date and time you signed up, the consent you gave, and a random code that identifies this device's game. We do not collect anything else about you or your phone.</p>
+<p><b>Why.</b> Only to send you ${PRIV.brand} promos, product news and event invitations by email, SMS or phone call. Your details are never shown on the leaderboard and we will never sell them.</p>
+<p><b>Your choice.</b> Signing up is optional and is based on your consent. You can play and appear on the leaderboard without signing up.</p>
+<p><b>How long we keep it.</b> Until you unsubscribe or ask us to delete it, or ${PRIV.keep} after you sign up, whichever comes first. Then it is securely deleted.</p>
+<p><b>Who can see it.</b> Only authorized CBK Marketing staff, and service providers that send our messages for us under a confidentiality agreement.</p>
+<p><b>Your rights.</b> Under the Data Privacy Act of 2012 you may ask to see, correct or delete your data, withdraw your consent at any time, and file a complaint with the National Privacy Commission. Every promo message includes a way to unsubscribe. Contact our Data Protection Officer at ${PRIV.dpo}. Full policy: ${PRIV.policy}.</p>`;
+function openPromo(){const f=pfE('promo');f.classList.add('on');pfE('pf_msg').textContent='';pfE('pf_go').disabled=false;setTimeout(()=>pfE('pf_name').focus(),50)}
+function closePromo(){pfE('promo').classList.remove('on');document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}
+function normMob(v){let d=v.replace(/[^\d+]/g,'');if(d.startsWith('+63'))d='0'+d.slice(3);else if(d.startsWith('63')&&d.length==12)d='0'+d.slice(2);return /^09\d{9}$/.test(d)?'+63'+d.slice(1):''}
+pfE('pf_no').onclick=closePromo;pfE('promo').addEventListener('pointerdown',e=>{if(e.target.id=='promo')closePromo()});
+pfE('pf').addEventListener('submit',e=>{e.preventDefault();const m=pfE('pf_msg'),nm=pfE('pf_name').value.trim().replace(/\s+/g,' '),em=pfE('pf_email').value.trim().toLowerCase(),mob=normMob(pfE('pf_mob').value);
+ if(!/^[\p{L}][\p{L} .'-]{1,59}$/u.test(nm)){m.textContent='Please enter your full name.';return}
+ if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(em)){m.textContent='Please enter a valid email address.';return}
+ if(!mob){m.textContent='Please enter a valid PH mobile number (09XX XXX XXXX).';return}
+ if(!pfE('pf_ok').checked){m.textContent='Please tick the box to agree to receive promos.';return}
+ if(!pfE('pf_age').checked){m.textContent='Sign-up is for 18 years old and above only.';return}
+ if(!API_URL){m.textContent='Preview only: not sent (scoreboard not connected).';return}
+ pfE('pf_go').disabled=true;m.textContent='Sending…';
+ const body=JSON.stringify({type:'lead',name:nm,email:em,mobile:mob,ok:1,age:1,cv:CONSENT_VER,ct:CONSENT_TXT,did});
+ const send=n=>fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body}).then(r=>r.json()).then(j=>{
+   if(j.ok){m.textContent="Thank you! You're on the list.";joined=true;try{localStorage.setItem('ap_joined','1')}catch(x){}setTimeout(closePromo,1600)}
+   else if(/busy|server/i.test(j.err||'')&&n<3){m.textContent='Server busy, retrying…';setTimeout(()=>send(n+1),1500+Math.random()*2500)}
+   else{m.textContent=j.err||'Could not send, please try again.';pfE('pf_go').disabled=false}})
+  .catch(()=>{if(n<2){m.textContent='Retrying…';setTimeout(()=>send(n+1),3000)}else{m.textContent='No connection. Please try again later.';pfE('pf_go').disabled=false}});send(0)});
 let lbS=0,lbV=0,lbDrag=null;
 function showLb(){st='lb';lbS=0;lbV=0;if(!API_URL){lbRows=lbGet('ap_local');lbMsg='Preview board (scoreboard not connected)';return}
  lbRows=lbGet('ap_lb');lbMsg='Loading…';
@@ -78,8 +136,8 @@ const STAGES=[
       bg4d:[[.24,.14,.34,.29],[.66,.14,.76,.29],[.24,.77,.34,.94],[.66,.77,.76,.94],[.24,.33,.38,.78],[.63,.33,.76,.78]]},
   boss:{img:'boss4',name:'DRAGON OF BAD LUCK',emoji:'🐉',hp:1800,hw:64,hh:64,ai:'dragon',shot:'badorb',rate:1.25,spd:.8}}];
 const LOOP_SPAN=9000,NST=()=>STAGES.length;
-/* every image a stage names is loaded automatically (backgrounds named bg*.jpg, everything else .png) */
-STAGES.forEach(t=>[t.bg,...(t.tiles||[]),t.boss.img,...t.obs.map(o=>o[0])].forEach(k=>{if(!IM[k]){const i=new Image();i.src='assets/'+k+(k.slice(0,2)=='bg'?'.jpg':'.png');IM[k]=i}}));
+/* every image a stage names is loaded automatically (backgrounds named bg*.jpg, everything else .webp) */
+STAGES.forEach(t=>[t.bg,...(t.tiles||[]),t.boss.img,...t.obs.map(o=>o[0])].forEach(k=>{if(!IM[k]){const i=new Image();i.src='assets/'+k+(k.slice(0,2)=='bg'?'.jpg':'.webp');IM[k]=i}}));
 const bAt=n=>{let t=0;for(let i=0;i<Math.min(n+1,NST());i++)t+=STAGES[i].span;return n<NST()?t:t+LOOP_SPAN*(n-NST()+1)};   // 4500, 12000, 20000, then +9000 each
 const stg=()=>bd%NST(),lp=()=>(bd/NST())|0,ST=()=>STAGES[stg()];
 const dif=()=>Math.min(2.8,.8+.32*bd+Math.min(.6,stT/180*.6));   // ramps up during each stage and jumps after every boss
@@ -95,14 +153,14 @@ cv.addEventListener('pointerdown',e=>{idleT=0;if(DEMO){exitSaver();return}const[
  if(st=='title'){sfx('click');if(y>270&&y<370)sex=x<W/2?'m':'f';else if(y>=420&&y<=470&&x>90&&x<270)go();else if(y>=478&&y<=518&&x>90&&x<270)showLb();else if(y>=522&&y<=562&&x>90&&x<270)openHelp();else if(y>=566&&y<=602&&x>90&&x<270&&!inst())install()}
  else if(st=='help'){helpTap(x,y)}
  else if(st=='lb'){lbDrag={y0:y,s0:lbS,ly:y,lt:performance.now(),mv:0};lbV=0}
- else if(st=='over'){if(ov>1)showLb()}
+ else if(st=='over'){if(promoOn()&&!joined&&x>55&&x<305&&y>418&&y<462){sfx('click');openPromo();return}if(ov>1)showLb()}
  else{for(const b of skBtns())if(Math.hypot(x-b.x,y-b.y)<32){useSkill(b.k);tch=false;return}
   if(P.bombs>0&&Math.hypot(x-BX,y-BY)<32){useBomb();tch=false;return}tx=x;ty=y-60}});
 cv.addEventListener('pointermove',e=>{if(tch&&st=='play'){const[x,y]=pt(e);tx=x;ty=y-60}
  if(st=='lb'&&lbDrag){const[x,y]=pt(e),n=performance.now();lbDrag.mv=Math.max(lbDrag.mv,Math.abs(y-lbDrag.y0));lbS=lbDrag.s0-(y-lbDrag.y0);lbV=-(y-lbDrag.ly)/Math.max(.008,(n-lbDrag.lt)/1000);lbDrag.ly=y;lbDrag.lt=n}});
 cv.addEventListener('wheel',e=>{if(st=='lb'){lbS+=e.deltaY*.6;e.preventDefault()}},{passive:false});
 addEventListener('pointerup',e=>{tch=false;if(st=='lb'&&lbDrag){const d=lbDrag;lbDrag=null;if(d.mv<8){lbV=0;const[x,y]=pt(e);if(x>100&&x<260&&y>575&&y<622)st='title'}}});
-addEventListener('keydown',e=>{idleT=0;if(DEMO){exitSaver();return}if(e.target===nmEl){if(e.key=='Enter')go();return}const k=e.key.toLowerCase();keys[k]=1;
+addEventListener('keydown',e=>{idleT=0;if(DEMO){exitSaver();return}if(e.target.closest&&e.target.closest('#promo'))return;if(e.target===nmEl){if(e.key=='Enter')go();return}const k=e.key.toLowerCase();keys[k]=1;
  if(st=='title'&&(k=='enter'||k==' '))go();else if(st=='lb')st='title';else if(st=='help'){if(k=='arrowright'&&hp<HELP.length-1)hp++;else if(k=='arrowleft'&&hp>0)hp--;else if(k=='escape'||k=='enter')st='title'}else if(st=='over'&&k=='enter'&&ov>1)showLb();if(st=='play'&&(k=='p'||k=='escape'))pause=!pause;if(st=='play'&&(k=='b'||k==' '))useBomb();if(st=='play'&&'123'.includes(k)&&k.length==1){const b=skBtns()[+k-1];if(b)useSkill(b.k)}});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&st=='play'&&!DEMO)pause=true});
@@ -773,7 +831,7 @@ function draw(){if(st=='play'){if(shake>0)g.translate((Math.random()-.5)*12*shak
  if(bannerT>0&&st=='play'){g.globalAlpha=Math.min(1,bannerT);tt('STAGE '+(bd+1),W/2,230,42,Y,'center',6);tt(ST().n,W/2,272,20,'#fff','center',4);g.globalAlpha=1}
  if(warnT>0&&((tm*5)|0)%2){tt('⚠ WARNING ⚠',W/2,250,38,'#ff3b30','center',6);tt(ST().boss.name+' APPROACHING',W/2,290,16,'#fff','center',4)}
  if(st=='over'){g.fillStyle='rgba(0,0,0,.6)';g.fillRect(0,0,W,H);tt('GAME OVER',W/2,220,44,R,'center',6);tt('SCORE '+score,W/2,285,26,'#fff','center',4);
-  tt('BEST '+hi,W/2,322,20,Y,'center',4);tt('BOSSES DEFEATED '+bd,W/2,352,15,'#fff','center',3);tt(subMsg,W/2,386,15,'#fff','center',3);if(ov>1)tt('TAP FOR LEADERBOARD',W/2,440,18,'#fff','center',4)}
+  tt('BEST '+hi,W/2,322,20,Y,'center',4);tt('BOSSES DEFEATED '+bd,W/2,352,15,'#fff','center',3);tt(subMsg,W/2,386,15,'#fff','center',3);const pb=promoOn()&&!joined;if(pb)btn(55,418,250,44,'🎁  GET PROMOS & EVENT INVITES','red',14);if(ov>1)tt('TAP FOR LEADERBOARD',W/2,pb?505:440,18,'#fff','center',4)}
  if(DEMO)saverDraw();
  else if(st=='play'&&!pause&&ok('ui_pause'))spr('ui_pause',PBX,PBY,34,0,34);else if(st=='play'&&!pause){g.save();g.fillStyle='rgba(10,10,14,.6)';g.strokeStyle=Y;g.lineWidth=2;g.beginPath();g.arc(PBX,PBY,15,0,7);g.fill();g.stroke();g.fillStyle='#fff';g.fillRect(PBX-6,PBY-7,4,14);g.fillRect(PBX+2,PBY-7,4,14);g.restore()}
  if(pause&&st=='play'){g.fillStyle='rgba(0,0,0,.65)';g.fillRect(0,0,W,H);panel(50,170,W-100,318);tt('PAUSED',W/2,222,36,Y,'center',3);tt('SCORE '+score+'  ·  STAGE '+(bd+1),W/2,256,14,'#fff','center',2);
