@@ -27,7 +27,7 @@
  <details><summary>Read the Privacy Notice</summary><div id="pf_notice"></div></details>
  <div class="msg" id="pf_msg" aria-live="polite"></div>
  <div class="row"><button type="button" class="no" id="pf_no">No thanks</button><button type="submit" class="go" id="pf_go">SIGN ME UP</button></div>
-</form></div><input id="nm" maxlength="12" placeholder="ENTER YOUR NAME" autocomplete="nickname" enterkeyhint="go"><script src="config.js"></script><script>
+</form></div><input id="nm" maxlength="12" placeholder="ENTER YOUR NAME" autocomplete="nickname" enterkeyhint="go"><script src="config.js"></script><script type="module" src="assets/3d/rig.js"></script><script>
 'use strict';
 const cv=document.getElementById('c'),g=cv.getContext('2d'),W=360,H=640,R='#e1251b',Y='#f5b800',K='#17171b';
 const nmEl=document.getElementById('nm');let sc=1,ox=0,oy=0,dpr=1;
@@ -38,7 +38,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v56';
+const VER='v57';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -52,7 +52,7 @@ function sprK(k,x,y,s,fl){const i=IM[k],w=i.naturalWidth*s,h=i.naturalHeight*s;g
 function spr(k,x,y,h,rot,mw){const i=IM[k];let w=h*i.naturalWidth/i.naturalHeight;if(mw&&w>mw){w=mw;h=w*i.naturalHeight/i.naturalWidth}g.save();g.translate(x,y);if(rot)g.rotate(rot);g.drawImage(i,-w/2,-h/2,w,h);g.restore()}
 function go(){const v=nmEl.value.trim().replace(/[<>&"']/g,'').slice(0,12);
  if(v.length<2){nmMsg='Enter your name (at least 2 letters)';nmT=2.5;nmEl.focus();return}
- pname=v;try{localStorage.setItem('ap_name',v)}catch(e){}nmEl.blur();sfx('start');init()}
+ pname=v;try{localStorage.setItem('ap_name',v)}catch(e){}nmEl.blur();sfx('start');init();rigIn=1}
 const lbGet=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return[]}};
 function localAdd(){const a=lbGet('ap_local');a.push({n:pname,s:score});a.sort((x,y)=>y.s-x.s);try{localStorage.setItem('ap_local',JSON.stringify(a.slice(0,100)))}catch(e){}}
 function submit(){subMsg='';if(!API_URL){localAdd();subMsg='Saved on this device';return}
@@ -542,7 +542,14 @@ const sMode=()=>{const a=['eye','glove','helm'].filter(k=>P.t[k]>0);return a.len
 function shield(x,y,k){const left=P.t[k];if(left<1.5&&((tm*12)|0)%2)return;const c=COL[k],p=1+.07*Math.sin(tm*9),r=(k=='helm'?40:37)*p;
  const gr=g.createRadialGradient(x,y,6,x,y,r);gr.addColorStop(0,`rgba(${c},.1)`);gr.addColorStop(.7,`rgba(${c},.25)`);gr.addColorStop(1,`rgba(${c},.7)`);
  g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,7);g.fill();g.save();g.shadowColor=`rgb(${c})`;g.shadowBlur=16;g.strokeStyle=`rgba(${c},1)`;g.lineWidth=k=='helm'?4:3;g.beginPath();g.arc(x,y,r,0,7);g.stroke();g.restore()}
-function hero(x,y,s,inv,md,tilt,fly){g.save();g.translate(x,y);if(inv>0&&((tm*20)|0)%2)g.globalAlpha=.4;
+/* 3D Hover-Rig (assets/3d/rig.js). Falls back to the 2D hero art if WebGL is unavailable. */
+let rigSlow=0;try{rigSlow=+localStorage.getItem('ap_rig2d')||0}catch(e){}
+/* if a phone renders the 3D rig too slowly, switch to the 2D hero automatically (remembered on this device) */
+const rigOn=()=>{if(!window.RIG||!RIG.ok||rigSlow)return false;if(RIG.ms>14&&tm>8){rigSlow=1;try{localStorage.setItem('ap_rig2d','1')}catch(e){}return false}return true};let rigIn=0,rigHit=0;
+function hero3d(x,y,s,size,st8){const a=g.globalAlpha;g.save();if(rigHit>0&&((tm*20)|0)%2)g.globalAlpha=a*.45;RIG.draw(g,x,y,size,st8,size*sc*dpr);g.restore()}
+function hero(x,y,s,inv,md,tilt,fly){
+ if(rigOn()){const pl=st=='play'&&fly;hero3d(x,y,s,fly?118:96,{sex:s,tilt:tilt||0,weapon:pl?P.wp:'drill',fire:pl,boost:pl&&P.boost>0,charge:pl?P.bombs:3,intro:pl?Math.max(0,rigIn):0,dt:fly?1/60:1/120});return}
+ g.save();g.translate(x,y);if(inv>0&&((tm*20)|0)%2)g.globalAlpha=.4;
  if(fly&&!ok(s)){const f=14+Math.random()*10;g.fillStyle='rgba(255,170,40,.85)';g.beginPath();g.moveTo(-8,30);g.lineTo(0,30+f);g.lineTo(8,30);g.fill();g.fillStyle='rgba(255,240,160,.9)';g.beginPath();g.moveTo(-4,30);g.lineTo(0,30+f*.6);g.lineTo(4,30);g.fill()}
  g.rotate(tilt||0);const k=md&&ok(s+'_'+md)?s+'_'+md:s;
  if(ok(k)){spr(k,0,0,90,0,70);g.restore();return}
@@ -790,7 +797,7 @@ function draw(){if(st=='play'){if(shake>0)g.translate((Math.random()-.5)*12*shak
   if(s.rf){g.save();g.shadowColor='#ffd21f';g.shadowBlur=10}
   if(ok(q[0])){spr(q[0],s.x,s.y,q[1],s.k=='coin'||s.k=='bottle'||s.k=='rock'?tm*7:Math.atan2(s.vy,s.vx)+(s.k=='spit'||s.k=='venom'||s.k=='missile'||s.k=='badorb'||s.k=='sludge'||s.k=='rbolt'?Math.PI/2:-Math.PI/2))}else if(s.k=='missile'){g.save();g.translate(s.x,s.y);g.rotate(Math.atan2(s.vy,s.vx)-Math.PI/2);g.fillStyle='#ff9a1f';g.beginPath();g.moveTo(-3,-9);g.lineTo(0,-16-Math.random()*6);g.lineTo(3,-9);g.fill();g.fillStyle=q[2];g.fillRect(-3.5,-9,7,18);g.fillStyle=R;g.beginPath();g.moveTo(-3.5,9);g.lineTo(0,15);g.lineTo(3.5,9);g.fill();g.restore()}else{g.fillStyle=q[2];g.beginPath();if(s.k=='laser')g.ellipse(s.x,s.y,3,9,Math.atan2(s.vy,s.vx)-Math.PI/2,0,7);else g.arc(s.x,s.y,5,0,7);g.fill()}
   if(s.rf)g.restore()}
- if(st=='play'||st=='over'){const md=sMode();if(st=='play'){const y=P.y+Math.sin(tm*6)*2;if(P.boost>0){for(let i=1;i<=4;i++){g.globalAlpha=.2*(5-i)/4;hero(P.x,y+i*18,sex,0,md,P.tilt,0)}g.globalAlpha=1;drawFx(1);aura(P.x,y)}for(const k of['eye','glove','helm','aid'])if(P.t[k]>0)shield(P.x,y,k);hero(P.x,y,sex,P.inv,md,P.tilt,1)}}
+ if(st=='play'||st=='over'){const md=sMode();if(st=='play'){const y=P.y+Math.sin(tm*6)*2;if(P.boost>0){for(let i=1;i<=4;i++){g.globalAlpha=.2*(5-i)/4;if(rigOn())RIG.blit(g,P.x,y+i*18,118);else hero(P.x,y+i*18,sex,0,md,P.tilt,0)}g.globalAlpha=1;drawFx(1);aura(P.x,y)}for(const k of['eye','glove','helm','aid'])if(P.t[k]>0)shield(P.x,y,k);rigHit=P.inv;hero(P.x,y+(rigIn>0?rigIn*rigIn*260:0),sex,P.inv,md,P.tilt,1)}}
  g.save();g.globalCompositeOperation='lighter';for(const f of F){g.globalAlpha=Math.min(1,f.l*2);g.fillStyle=f.c;g.beginPath();g.arc(f.x,f.y,2.6,0,7);g.fill()}g.restore();g.globalAlpha=1;drawFx(0);
  for(const q of T){g.globalAlpha=Math.min(1,q.l*2);tt(q.s,q.x,q.y,15,q.c,'center',4)}g.globalAlpha=1;
  if(st=='play')drawSkill();
@@ -994,7 +1001,7 @@ function loop(n){const dt=Math.min(.05,(n-last)/1000||0);last=n;
  g.setTransform(dpr,0,0,dpr,0,0);g.fillStyle='#000';g.fillRect(0,0,innerWidth,innerHeight);
  g.setTransform(dpr*sc,0,0,dpr*sc,dpr*ox,dpr*oy);g.save();g.beginPath();g.rect(0,0,W,H);g.clip();
  if(!pause)bgS+=(st=='play'?BV:40)*dt;
- if(st=='play'){if(!pause)upd(dt)}else{tm+=dt;if(st=='over')ov+=dt}
+ if(st=='play'){if(!pause){upd(dt);if(rigIn>0)rigIn=Math.max(0,rigIn-dt*1.1)}}else{tm+=dt;if(st=='over')ov+=dt}
  nmEl.style.display=st=='title'&&!howInst?'block':'none';if(nmT>0)nmT-=dt;draw();g.restore();requestAnimationFrame(loop)}
 P=mkP();
 requestAnimationFrame(loop);
