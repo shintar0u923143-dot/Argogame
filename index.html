@@ -38,7 +38,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v59';
+const VER='v60';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -299,7 +299,8 @@ function drawBit(b){g.save();g.translate(b.x,b.y);g.rotate(Math.atan2(b.vy,b.vx)
 function drawStaple(b){g.save();g.translate(b.x,b.y);g.rotate(Math.atan2(b.vx,-b.vy));
  if(b.el){g.globalCompositeOperation='lighter';glow('eye',0,0,12+b.el*3,.7);g.globalCompositeOperation='source-over';g.globalAlpha=1;g.strokeStyle='rgba(180,230,255,.9)';g.lineWidth=1;g.beginPath();g.moveTo(0,8);for(let i=1;i<5;i++)g.lineTo((Math.random()-.5)*7,8+i*5);g.stroke()}
  else{g.strokeStyle='rgba(255,122,26,.75)';g.lineWidth=1.5;g.beginPath();g.moveTo(0,4);g.quadraticCurveTo(3,12,0,20);g.stroke()}
- g.strokeStyle=b.el?'#eaf8ff':'#d9dde3';g.lineWidth=2.4;g.lineCap='round';g.beginPath();g.moveTo(-5,6);g.lineTo(-5,-5);g.lineTo(5,-5);g.lineTo(5,6);g.stroke();g.restore()}
+ g.strokeStyle=b.el?'#eaf8ff':'#d9dde3';g.lineWidth=2.4;g.lineCap='round';g.beginPath();g.moveTo(-5,-7);g.lineTo(-5,4);g.lineTo(5,4);g.lineTo(5,-7);g.stroke();   // legs point forward into the target, crown at the back
+ g.fillStyle=b.el?'#ffffff':'#f4f6f8';g.beginPath();g.moveTo(-6.2,-7);g.lineTo(-5,-10);g.lineTo(-3.8,-7);g.moveTo(3.8,-7);g.lineTo(5,-10);g.lineTo(6.2,-7);g.fill();g.restore()}
 function drawPets(){if(!P.pt||!P.pt.length)return;P.pt.forEach((p,i)=>{const z=62*p.in;if(z<2)return;
  if(rigOn()){if(i==0)RIG.pet(g,p.x,p.y,z,rid(P.wp),tm);else RIG.petBlit(g,p.x,p.y,z)}
  else{g.save();g.globalCompositeOperation='lighter';glow('eye',p.x,p.y,18,.7);g.restore();g.globalAlpha=1;em(RIGD[P.wp].e,p.x,p.y,18)}})}
@@ -309,7 +310,7 @@ function drawSkill(){if(!SK)return;const s=SK,t=s.t,k=s.k,L=SKL[k],fin=k=='disc'
  s.bx=s.tx;s.by=s.ty;s.bw=boss?boss.hw:70;
  if(rigOn())RIG.skill(g,L.sk,t,s,{W,H,res:sc*dpr});else{g.globalAlpha=fade;em(L.e,s.tx,s.ty+90,110);g.globalAlpha=1}
  g.save();g.globalCompositeOperation='lighter';
- if(k=='heat'&&t>.8&&t<3.85){const hx=s.cx||s.tx,hy=s.cy||s.ty;glow('fire',hx,hy,70+Math.random()*14,.85);glow('white',hx,hy,26,.75)}
+ if(k=='heat'&&t>.8&&t<3.85){const hx=s.cx||s.tx,hy=s.cy||s.ty;glow('fire',hx,hy,44+Math.random()*10,.7);glow('white',hx,hy,16,.7)}
  if(k=='nail'){const ch=Math.max(0,Math.min(1,(t-.5)/2.2)),tx0=s.tipX||s.tx,ty0=s.tipY||s.ty+150;
   if(t>.5&&t<2.7){glow('eye',tx0,ty0,20+ch*50+Math.random()*10,.5+ch*.5);glow('white',tx0,ty0,8+ch*16,.8)}
   if(t>=2.7&&t<3.2){const q=(t-2.7)/.5;glow('eye',s.tx,s.ty,200*(1-q)+60,1-q);glow('white',s.tx,s.ty,90*(1-q),1-q)}}

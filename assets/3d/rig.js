@@ -282,28 +282,44 @@ function skillRenderer() {
   sR.setPixelRatio(1); sR.outputColorSpace = THREE.SRGBColorSpace; sR.toneMapping = THREE.ACESFilmicToneMapping; sR.toneMappingExposure = 1.2;
   sScene.environment = new THREE.PMREMGenerator(sR).fromScene(new RoomEnvironment(), .04).texture; return sR; }
 const PROP = {};
-{ // GIANT GRINDER: angle grinder, disc faces the camera
+function textTex(lines, w, h, fg, bg, font) { return cvs(w, h, (x) => { if (bg) { x.fillStyle = bg; x.beginPath(); if (x.roundRect) x.roundRect(4, 4, w - 8, h - 8, h * .22); else x.rect(4, 4, w - 8, h - 8); x.fill(); }
+  x.fillStyle = fg; x.textAlign = 'center'; x.textBaseline = 'middle'; lines.forEach((l, i) => { x.font = l[1] || font; x.fillText(l[0], w / 2, h * (i + .5) / lines.length + 2); }); }); }
+{ // GIANT GRINDER: modelled on the ARGO angle grinder: red motor body with the black ARGO badge, grey-khaki gear head, black rear housing, side handle and guard
   const g = new THREE.Group(); sScene.add(g); PROP.grind = g; g.visible = false;
-  const body = new THREE.Group(); g.add(body);
-  part(cyl(.42, .38, 2.6, 24), M.red, body, [-1.7, 0, 0], [0, 0, Math.PI / 2]);
-  for (let i = 0; i < 4; i++) part(new THREE.TorusGeometry(.42, .05, 6, 20), M.black, body, [-2.6 + i * .2, 0, 0], [0, Math.PI / 2, 0], false);
-  part(cyl(.3, .3, .5, 16), M.black, body, [-3.2, 0, 0], [0, 0, Math.PI / 2]);
-  part(roundBox(.95, .8, .8, .12), M.black, body, [0, 0, 0]);
-  part(new THREE.PlaneGeometry(1.7, .42), badgeMat, body, [-1.7, 0, .43], null, false);
-  part(cyl(.12, .12, 1.1, 12), M.black, body, [0, .9, 0]);   // side handle
-  g.guard = part(new THREE.CylinderGeometry(1.45, 1.45, .32, 32, 1, true, Math.PI * .1, Math.PI * .95), M.yel, body, [0, 0, .55], [Math.PI / 2, 0, 0]);
-  g.disc = part(cyl(1.35, 1.35, .09, 40), M.disc, body, [0, 0, .62], [Math.PI / 2, 0, 0], 2); }
-{ // ARGO HAMMER: sledgehammer with glowing edges and the logo on both faces; pivot at the end of the handle
+  const body = new THREE.Group(); g.add(body); const KHAKI = std(0xa7a898, .45, .35);
+  const motor = part(cyl(.46, .44, 1.9, 28), M.red, body, [-1.45, 0, 0], [0, 0, Math.PI / 2]); motor.scale.set(1, 1, .92);
+  part(new THREE.PlaneGeometry(1.1, .34), new THREE.MeshStandardMaterial({ map: textTex([['A R G O']], 256, 80, '#fff', '#121214', 'bold 52px Arial, sans-serif'), transparent: true, roughness: .4, polygonOffset: true, polygonOffsetFactor: -2 }), body, [-1.35, 0, .435], null, false);
+  const rear = part(cyl(.44, .36, 1.3, 24), M.black, body, [-3.0, 0, 0], [0, 0, Math.PI / 2]); rear.scale.set(1, 1, .9);
+  for (let i = 0; i < 5; i++) part(box(.05, .5, .06), std(0x2c2c32, .6, .2), body, [-2.6 - i * .16, .2, .37], null, false);   // rear vents
+  part(cyl(.14, .22, .6, 14), M.black, body, [-3.9, 0, 0], [0, 0, Math.PI / 2]);   // cable boot
+  part(cyl(.08, .08, 1.2, 10), M.black, body, [-4.7, -.15, 0], [0, 0, Math.PI / 2 + .25], false);
+  part(roundBox(1.0, 1.0, .95, .18), KHAKI, body, [0, 0, 0]);   // gear head
+  for (let i = 0; i < 3; i++) part(box(.5, .07, .1), std(0x2a2a2e, .6, .2), body, [-.05, .25 - i * .16, .49], null, false);   // head vents
+  part(cyl(.12, .12, .14, 12), M.black, body, [.15, .55, .1], null, false);   // spindle lock
+  part(cyl(.13, .16, 1.25, 14), M.black, body, [.1, -.1, 1.05], [Math.PI / 2, 0, 0]);   // side handle (sticks out toward you)
+  part(cyl(.16, .16, .35, 14), M.steel, body, [0, -.6, 0], null, false);   // spindle
+  g.guard = part(new THREE.CylinderGeometry(1.48, 1.48, .34, 36, 1, true, Math.PI * .55, Math.PI), M.black, body, [0, -.66, 0]);
+  part(new THREE.CircleGeometry(1.48, 36, Math.PI * .55 - Math.PI / 2, Math.PI), M.black, body, [0, -.5, 0], [-Math.PI / 2, 0, 0], false);
+  g.disc = part(cyl(1.35, 1.35, .09, 40), M.disc, body, [0, -.82, 0], null, 2); }
+{ // ARGO HAMMER: modelled on the ARGOPOWER 16 oz claw hammer: forged steel head (round face + split curved claw), yellow fiberglass handle, red-orange grip; pivot at the end of the handle
   const g = new THREE.Group(); sScene.add(g); PROP.hammer = g; g.visible = false;
-  part(cyl(.17, .2, 4.2, 16), std(0x2a2a30, .5, .3), g, [0, 2.1, 0]);
-  for (let i = 0; i < 6; i++) part(cyl(.215, .215, .16, 16), i % 2 ? M.black : M.red, g, [0, .3 + i * .17, 0], null, false);
-  part(cyl(.26, .26, .2, 16), M.steel, g, [0, .05, 0]);
-  const head = new THREE.Group(); head.position.set(0, 4.45, 0); g.add(head); g.head = head;
-  part(roundBox(2.4, 1.05, 1.05, .14), M.steel, head, [0, 0, 0]);
-  part(box(.9, 1.1, 1.1), M.red, head, [0, 0, 0]);
-  for (const sz of [-1, 1]) part(new THREE.PlaneGeometry(.88, .22), badgeMat, head, [0, 0, sz * .56], [0, sz < 0 ? Math.PI : 0, 0], false);
-  g.edges = []; for (const sx of [-1, 1]) { const e = part(box(.06, 1.08, 1.08), M.strip, head, [sx * 1.2, 0, 0], null, false); g.edges.push(e); part(cyl(.5, .5, .1, 24), M.steel, head, [sx * 1.25, 0, 0], [0, 0, Math.PI / 2]); }
-  g.aura = sprite(0xffe680, 6); head.add(g.aura); }
+  const YH = std(0xf2e21c, .35, .05), GRIP = std(0xf04a14, .55, .02), FORGE = std(0xb9bec6, .22, .95), DARK = std(0x8d939b, .3, .9);
+  const hd = part(cyl(.2, .22, 4.0, 20), YH, g, [0, 2.15, 0]); hd.scale.set(1.25, 1, .85);
+  const gr = part(cyl(.25, .27, 1.7, 20), GRIP, g, [0, .95, 0]); gr.scale.set(1.25, 1, .9);
+  for (let i = 0; i < 6; i++) part(box(.5, .04, .1), std(0xc23a0e, .7, 0), g, [0, .35 + i * .22, .23], null, false);   // grip ribs
+  part(new THREE.TorusGeometry(.26, .05, 6, 20), YH, g, [0, 1.82, 0], [Math.PI / 2, 0, 0], false);   // yellow accent
+  part(cyl(.3, .26, .14, 20), GRIP, g, [0, .07, 0]);   // flared end
+  part(new THREE.PlaneGeometry(1.7, .3), new THREE.MeshStandardMaterial({ map: textTex([['ARGOPOWER']], 512, 90, '#17171b', null, 'bold 64px Arial Narrow, sans-serif'), transparent: true, roughness: .4, polygonOffset: true, polygonOffsetFactor: -2 }), g, [0, 2.75, .175], [0, 0, Math.PI / 2], false);
+  const head = new THREE.Group(); head.position.set(0, 4.25, 0); g.add(head); g.head = head;
+  part(cyl(.27, .3, .5, 18), FORGE, head, [0, -.2, 0]);   // neck
+  part(roundBox(.75, .62, .52, .1), FORGE, head, [0, 0, 0]);   // eye
+  part(cyl(.32, .3, .75, 24), FORGE, head, [-.72, 0, 0], [0, 0, Math.PI / 2]);   // poll
+  part(cyl(.37, .37, .16, 24), DARK, head, [-1.15, 0, 0], [0, 0, Math.PI / 2]);   // striking face
+  const cs = new THREE.Shape(); cs.moveTo(.3, .28); cs.quadraticCurveTo(1.15, .32, 1.65, -.35); cs.lineTo(1.5, -.42); cs.quadraticCurveTo(1.05, .02, .3, -.12); cs.closePath();
+  const cg = new THREE.ExtrudeGeometry(cs, { depth: .16, bevelEnabled: true, bevelThickness: .03, bevelSize: .03, bevelSegments: 2 }); cg.translate(0, 0, -.08);
+  for (const sz of [-1, 1]) part(cg, FORGE, head, [0, 0, sz * .12]);   // split claw
+  part(new THREE.PlaneGeometry(.62, .42), new THREE.MeshStandardMaterial({ map: textTex([['ARGOPOWER', 'bold 30px Arial Narrow,sans-serif'], ['16 oz', 'bold 26px Arial,sans-serif'], ['DROP FORGED', 'bold 22px Arial,sans-serif']], 256, 170, '#3a3d44', null, ''), transparent: true, roughness: .4, polygonOffset: true, polygonOffsetFactor: -2 }), head, [0, .02, .27], null, false);
+  g.edges = []; g.aura = sprite(0xffe680, 6); head.add(g.aura); }
 { // VOLTAGE TESTER: giant ArgoPower voltage tester pen (red handle, neon window, brass cap, slotted tip)
   const g = new THREE.Group(); sScene.add(g); PROP.volt = g; g.visible = false;
   part(cyl(.42, .42, 2.0, 24), M.tester, g, [0, 1.6, 0]);
@@ -325,13 +341,13 @@ function poseSkill(k, t, I) {
   for (const p in PROP) PROP[p].visible = p === k; const g = PROP[k], bx = I.bx, by = I.by, bw = I.bw || 70;
   if (k === 'grind') {   // flies in, grinds back and forth across the boss with sparks, flies out   (damage .8 - 3.8)
     const s = 50; g.scale.setScalar(s);
-    const tx = bx + Math.sin((t - .8) * 2.4) * bw * .55, ty = by + 38 + Math.sin(t * 31) * 3;
+    const tx = bx + 20 + Math.sin((t - .8) * 2.4) * bw * .55, ty = by + 14 + Math.sin(t * 31) * 3;
     const a = ez(t / .8), o = ezIn((t - 3.8) / .5);
     at(g, lerp(470, tx, a) + o * 320, lerp(-180, ty, a) - o * 420, 0);
-    g.rotation.set(-.3 + (1 - a) * .9, .2, -.45 + (1 - a) * 1.5 + Math.sin((t - .8) * 2.4) * .12);
-    g.disc.rotation.y = -t * 60; I.cx = tx; I.cy = ty + 1.35 * s * .9; }
+    g.rotation.set(.75 - (1 - a) * .6, -.35, -.25 + (1 - a) * 1.2 + Math.sin((t - .8) * 2.4) * .1);
+    g.disc.rotation.y = -t * 60; I.cx = tx - 52; I.cy = ty + 58; }
   else if (k === 'hammer') {   // rises out of the screen toward you crackling with power, then slams down flat onto the boss at 1.3   (end 2.6)
-    const piv = { x: bx + 10, y: by + 270 }, dx = bx - piv.x, dy = by - piv.y, L = Math.hypot(dx, dy), s = L / 4.45;
+    const piv = { x: bx + 10, y: by + 270 }, dx = bx - piv.x, dy = by - piv.y, L = Math.hypot(dx, dy), s = L / 4.25;
     const rz = Math.atan2(-dx, -dy);   // in-plane direction from the grip to the boss
     let lift, sc = s, twist = 0;
     if (t < .3) { lift = 1.0; sc = s * ez(t / .3); twist = (1 - ez(t / .3)) * 3; }
@@ -345,10 +361,10 @@ function poseSkill(k, t, I) {
   else {   // VOLTAGE OVERLOAD: slides in pointing at the boss, charges up (neon glows, shakes), overload blast at 2.7   (end 3.6)
     const s = 42; g.scale.setScalar(s);
     let ux = bx - 70, uy = by - 600; const ul = Math.hypot(ux, uy); ux /= ul; uy /= ul;
-    const tip = { x: bx - ux * 70, y: by - uy * 70 }, gx = tip.x - ux * 2.7 * s, gy = tip.y - uy * 2.7 * s;
+    const tip = { x: bx - ux * 52, y: by - uy * 52 }, gx = tip.x - ux * 2.7 * s, gy = tip.y - uy * 2.7 * s;
     const a = ez(t / .5), o = ezIn((t - 3.1) / .5), ch = clamp((t - .5) / 2.2, 0, 1), sh = ch * ch * 7;
     at(g, lerp(gx - 260, gx, a) - o * 260 + (Math.random() - .5) * sh, lerp(gy + 380, gy, a) + o * 380 + (Math.random() - .5) * sh, 0);
-    g.rotation.set(0, 0, 0); g.rotateZ(Math.atan2(ux, uy) * -1); g.rotateY(.5 + t * .6);
+    g.rotation.set(0, 0, 0); g.rotateZ(Math.atan2(ux, uy)); g.rotateY(.5 + t * .6);
     const over = t > 2.7 && t < 3.0;
     M.neon.emissive.setHSL(lerp(0, .58, ch), 1, .5); M.neon.emissiveIntensity = over ? 6 : .5 + ch * 4 + Math.random() * ch;
     g.neonGlow.material.color.setHSL(lerp(0, .58, ch), 1, .6); g.neonGlow.scale.setScalar(2 + ch * 4 + (over ? 6 : 0)); g.tip.scale.setScalar(1 + ch * 3 + (over ? 6 : 0));
