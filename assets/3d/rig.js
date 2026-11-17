@@ -144,9 +144,9 @@ const RIGS = {};
   flame(R.flames, g, [0, -1.45, -.05], .32, 1.4);
   spoilerOn(g, -1.62, 1.05); R.pilot = pilotOn(g, M.yel, true); R.leds = leds(g, -.82, .4);
   // level add-ons: side torch cannons (2), armor plates (4), second cannons (6), max: blue arc coils (7)
-  for (const sx of [-1, 1]) { const c = addon(R.add, 2, new THREE.Group()); c.position.set(sx * 1.55, .05, -.05); g.add(c); part(cyl(.11, .15, .7, 14), M.steel, c); part(new THREE.ConeGeometry(.04, .2, 8), M.arc, c, [0, .45, 0], null, false);
+  for (const sx of [-1, 1]) { const c = addon(R.add, -1, new THREE.Group()); c.position.set(sx * 1.55, .05, -.05); g.add(c); part(cyl(.11, .15, .7, 14), M.steel, c); part(new THREE.ConeGeometry(.04, .2, 8), M.arc, c, [0, .45, 0], null, false);
     const a = addon(R.add, 4, part(roundBox(.5, .9, .14, .05), M.red, g, [sx * .78, .2, .4], [0, sx * .35, 0])); a.ink = 1;
-    const c2 = addon(R.add, 6, new THREE.Group()); c2.position.set(sx * 2.05, -.25, -.05); g.add(c2); part(cyl(.09, .12, .55, 12), M.steel, c2); part(new THREE.ConeGeometry(.035, .16, 8), M.arc, c2, [0, .36, 0], null, false);
+    const c2 = addon(R.add, -2, new THREE.Group()); c2.position.set(sx * 2.05, -.25, -.05); g.add(c2); part(cyl(.09, .12, .55, 12), M.steel, c2); part(new THREE.ConeGeometry(.035, .16, 8), M.arc, c2, [0, .36, 0], null, false);
     const m = addon(R.add, 7, new THREE.Group()); m.position.set(sx * .78, -.05, .45); g.add(m); helix(.12, .55, 4, .03, M.arc, m, [0, 0, 0]); }
   R.glowC = 0xbfe9ff; }
 
@@ -176,9 +176,9 @@ const RIGS = {};
   // circular saw blade mounted behind the pilot
   R.saw = part(cyl(.55, .55, .04, 32), M.disc, g, [0, -1.0, .78], [Math.PI / 2 - .35, 0, 0], 2);
   spoilerOn(g, -1.32, .95); R.pilot = pilotOn(g, M.yel, false); R.leds = leds(g, -.78, .37);
-  for (const sx of [-1, 1]) { const c = addon(R.add, 2, new THREE.Group()); c.position.set(sx * 1.6, .1, 0); g.add(c); part(roundBox(.28, .55, .28, .06), M.red, c); const b = part(new THREE.ConeGeometry(.07, .4, 6), M.steel, c, [0, .45, 0], null, false); c.bit = b;
+  for (const sx of [-1, 1]) { const c = addon(R.add, -1, new THREE.Group()); c.position.set(sx * 1.6, .1, 0); g.add(c); part(roundBox(.28, .55, .28, .06), M.red, c); const b = part(new THREE.ConeGeometry(.07, .4, 6), M.steel, c, [0, .45, 0], null, false); c.bit = b;
     addon(R.add, 4, part(box(.5, .35, .08), M.wood, g, [sx * .62, .62, .3], [0, sx * .3, 0]));
-    const c2 = addon(R.add, 6, new THREE.Group()); c2.position.set(sx * 2.05, -.2, 0); g.add(c2); part(roundBox(.22, .45, .22, .05), M.black, c2); c2.bit = part(new THREE.ConeGeometry(.06, .34, 6), M.steel, c2, [0, .38, 0], null, false);
+    const c2 = addon(R.add, -2, new THREE.Group()); c2.position.set(sx * 2.05, -.2, 0); g.add(c2); part(roundBox(.22, .45, .22, .05), M.black, c2); c2.bit = part(new THREE.ConeGeometry(.06, .34, 6), M.steel, c2, [0, .38, 0], null, false);
     addon(R.add, 7, part(new THREE.TorusGeometry(.3, .04, 6, 20), M.strip, g, [sx * 1.15, -.6, .3], [0, 0, 0], false)); }
   R.glowC = 0xffa040; }
 
@@ -207,9 +207,9 @@ const RIGS = {};
     flame(R.flames, g, [sx * .45, -1.4, -.02], .18, .9); }
   flame(R.flames, g, [0, -1.42, -.05], .26, 1.25);
   spoilerOn(g, -1.35, .9); R.pilot = pilotOn(g, M.white, false); R.leds = leds(g, -.75, .32);
-  for (const sx of [-1, 1]) { const c = addon(R.add, 2, new THREE.Group()); c.position.set(sx * 1.2, .15, 0); g.add(c); part(roundBox(.3, .5, .25, .05), std(0x8d939c, .3, .7), c); part(box(.2, .08, .2), M.red, c, [0, .28, 0], null, false);
+  for (const sx of [-1, 1]) { const c = addon(R.add, -1, new THREE.Group()); c.position.set(sx * 1.2, .15, 0); g.add(c); part(roundBox(.3, .5, .25, .05), std(0x8d939c, .3, .7), c); part(box(.2, .08, .2), M.red, c, [0, .28, 0], null, false);
     addon(R.add, 4, helix(.06, .9, 5, .025, M.coil, g, [sx * .35, .7, .35]));
-    const c2 = addon(R.add, 6, new THREE.Group()); c2.position.set(sx * 1.6, -.35, 0); g.add(c2); part(roundBox(.24, .4, .22, .05), std(0x8d939c, .3, .7), c2);
+    const c2 = addon(R.add, -2, new THREE.Group()); c2.position.set(sx * 1.6, -.35, 0); g.add(c2); part(roundBox(.24, .4, .22, .05), std(0x8d939c, .3, .7), c2);
     addon(R.add, 7, part(new THREE.TorusGeometry(.42, .03, 6, 24), M.arc, g, [sx * 1.85, -.75, .62], null, false)); }
   R.glowC = 0x66ccff; }
 
@@ -229,7 +229,7 @@ function update(s) {
   root.rotation.set(-pitch - intro * .5, roll * .55 + br, -(s.tilt || 0) * .35 + (s.spin || 0));
   root.position.z = Math.sin(t * 5.5) * .07; root.position.x = Math.sin(t * 2.3) * .03;
   R.pilot.rotation.y = roll * .25; R.pilot.head.rotation.z = (s.tilt || 0) * .3;
-  const lv = s.lv || 1; for (const a of R.add) a.visible = lv >= a.lv;
+  const lv = s.lv || 1, at = s.at || 0; for (const a of R.add) a.visible = a.lv < 0 ? at >= -a.lv : lv >= a.lv;
   if (s.fire) { recoil = Math.min(1, recoil + dt * 30); spin += dt * 38; } else { recoil = Math.max(0, recoil - dt * 8); spin += dt * 4; }
   const kick = s.fire ? Math.sin(t * 70) * .5 + .5 : 0;
   if (rk === 'weld') { R.nose.position.y = 1.6; R.tip.scale.setScalar(s.fire ? 1 + Math.random() * .5 : .8); R.tipGlow.material.opacity = s.fire ? .7 + Math.random() * .3 : .35; R.tipGlow.scale.setScalar(s.fire ? 1.4 + Math.random() * .6 : .9);
@@ -270,6 +270,13 @@ const PETS = {};
   part(new THREE.TorusGeometry(.32, .09, 8, 20), M.steel, g, [0, 0, .65], null, false); g.orb = part(new THREE.SphereGeometry(.18, 14, 10), M.orb, g, [0, 0, .72], null, false);
   g.glow = sprite(0x66ccff, 1.6); g.glow.position.set(0, 0, .75); g.add(g.glow); part(box(.9, .12, .12), M.hazard, g, [0, 0, -.3], null, false); }
 let petC = null;
+const ATT = {};
+{ const g = new THREE.Group(); pScene.add(g); ATT.weld = g; g.visible = false; part(cyl(.22, .3, 1.3, 16), M.steel, g); part(cyl(.3, .3, .2, 16), M.red, g, [0, -.55, 0]); part(cyl(.14, .2, .35, 14), std(0xd9c7a8, .6, 0), g, [0, .8, 0]); part(new THREE.ConeGeometry(.06, .4, 8), M.arc, g, [0, 1.15, 0], null, false); const sp = sprite(0xbfe9ff, 1.4); sp.position.set(0, 1.3, .1); g.add(sp); helix(.1, .9, 5, .04, M.orangeCable, g, [.35, -.2, 0]); }
+{ const g = new THREE.Group(); pScene.add(g); ATT.timber = g; g.visible = false; part(roundBox(.55, 1.0, .55, .12), M.red, g); part(cyl(.2, .26, .35, 16), M.steel, g, [0, .65, 0]); part(new THREE.ConeGeometry(.14, .8, 6), M.steel, g, [0, 1.2, 0]); helix(.09, .6, 4, .03, M.black, g, [0, 1.15, 0]); part(box(.6, .14, .5), M.black, g, [0, -.45, 0]); }
+{ const g = new THREE.Group(); pScene.add(g); ATT.spark = g; g.visible = false; part(roundBox(.6, 1.0, .5, .1), std(0x8d939c, .3, .7), g); part(box(.62, .28, .52), M.red, g, [0, -.35, 0]); part(box(.08, .8, .08), M.steel, g, [0, .2, .3], null, false); const sp = sprite(0x9fe4ff, 1.2); sp.position.set(0, .7, .1); g.add(sp); }
+const ICO = {};
+function cachedIcon(key, f) { if (!ICO[key]) { f(); ICO[key] = copyOf(128); } return ICO[key]; }
+function soloPet(rk, which) { for (const k in PETS) PETS[k].visible = which === 'pet' && k === rk; for (const k in ATT) ATT[k].visible = which === 'att' && k === rk; }
 
 /* ======================================================================= */
 /*  SIGNATURE SKILLS (full screen, 3D)                                       */
@@ -324,8 +331,8 @@ function textTex(lines, w, h, fg, bg, font) { return cvs(w, h, (x) => { if (bg) 
   const g = new THREE.Group(); sScene.add(g); PROP.volt = g; g.visible = false;
   part(cyl(.42, .42, 2.0, 24), M.tester, g, [0, 1.6, 0]);
   for (let i = 0; i < 6; i++) part(new THREE.TorusGeometry(.43, .05, 6, 24), std(0xb81d16, .4, 0), g, [0, 1.0 + i * .2, 0], [Math.PI / 2, 0, 0], false);
-  part(cyl(.4, .4, .9, 24), M.clear, g, [0, 3.05, 0], null, false); g.neon = part(new THREE.CapsuleGeometry(.14, .55, 6, 12), M.neon, g, [0, 3.05, 0], null, false);
-  g.neonGlow = sprite(0xff5040, 2.4); g.neonGlow.position.set(0, 3.05, .2); g.add(g.neonGlow);
+  part(cyl(.4, .4, .9, 24), M.clear, g, [0, 3.05, 0], null, false); g.neonM = std(0x401010, .3, 0, { emissive: 0xff5a1a, emissiveIntensity: .3 }); g.neon = part(new THREE.CapsuleGeometry(.16, .6, 6, 12), g.neonM, g, [0, 3.05, 0], null, false);
+  g.neonGlow = sprite(0xff6a20, 2.4); g.neonGlow.material.depthTest = false; g.neonGlow.renderOrder = 5; g.neonGlow.position.set(0, 3.05, 0); g.add(g.neonGlow);
   part(cyl(.44, .44, .45, 24), M.brass, g, [0, 3.72, 0]); for (let i = 0; i < 7; i++) part(new THREE.TorusGeometry(.45, .03, 6, 24), M.brass, g, [0, 3.55 + i * .05, 0], [Math.PI / 2, 0, 0], false);
   part(box(.16, 1.9, .14), M.tester, g, [0, 2.75, .52]); part(box(.16, .3, .5), M.tester, g, [0, 3.62, .32]);   // pocket clip
   part(cyl(.42, .2, .5, 24), M.tester, g, [0, .35, 0]); part(cyl(.17, .17, 2.1, 16), M.tester, g, [0, -.95, 0]);
@@ -346,18 +353,22 @@ function poseSkill(k, t, I) {
     at(g, lerp(470, tx, a) + o * 320, lerp(-180, ty, a) - o * 420, 0);
     g.rotation.set(.75 - (1 - a) * .6, -.35, -.25 + (1 - a) * 1.2 + Math.sin((t - .8) * 2.4) * .1);
     g.disc.rotation.y = -t * 60; I.cx = tx - 52; I.cy = ty + 58; }
-  else if (k === 'hammer') {   // rises out of the screen toward you crackling with power, then slams down flat onto the boss at 1.3   (end 2.6)
-    const piv = { x: bx + 10, y: by + 270 }, dx = bx - piv.x, dy = by - piv.y, L = Math.hypot(dx, dy), s = L / 4.25;
-    const rz = Math.atan2(-dx, -dy);   // in-plane direction from the grip to the boss
-    let lift, sc = s, twist = 0;
-    if (t < .3) { lift = 1.0; sc = s * ez(t / .3); twist = (1 - ez(t / .3)) * 3; }
-    else if (t < 1.05) { lift = 1.0 + (t - .3) * .3 + Math.sin(t * 40) * .02; twist = Math.sin(t * 3) * .25; }
-    else if (t < 1.3) { lift = lerp(1.22, 0, ezIn((t - 1.05) / .25)); }
-    else { const q = t - 1.3; lift = Math.max(0, Math.sin(Math.min(q, .35) / .35 * Math.PI) * .18); if (q > .85) sc = s * (1 - ez((q - .85) / .45)); }
-    g.scale.setScalar(Math.max(.001, sc)); at(g, piv.x, piv.y, 0);
-    g.rotation.set(0, 0, 0); g.rotateZ(-rz); g.rotateX(lift); g.rotateY(twist);
+  else if (k === 'hammer') {   // side view, like a real hammer blow: raised behind, swings over, the round striking face lands DOWN on the boss at 1.3   (end 2.6)
+    const W0 = I.W || 360, right = bx < W0 / 2, room = right ? W0 - 12 - bx : bx - 12;
+    const s = clamp(room / 4.4, 30, 52), dir = right ? 1 : -1;
+    const piv = { x: bx + dir * 4.25 * s, y: by + 26 - 1.15 * s };
+    // wind-up below the boss leaning back, then a big overhead swing that lands with the handle level and the face down
+    const H0 = I.H || 640, gw = { x: clamp(bx + dir * 30, 80, W0 - 80), y: Math.min(H0 - 230, by + 340) };
+    let th, gx = gw.x, gy = gw.y, sc = s * 1.15;
+    if (t < .3) { th = -.2; sc = s * 1.15 * ez(t / .3); gy += (1 - ez(t / .3)) * 120; }
+    else if (t < 1.05) { th = -.2 - (t - .3) * .25 + Math.sin(t * 45) * .02 * (t - .3); }
+    else if (t < 1.3) { const k = ezIn((t - 1.05) / .25); th = lerp(-.39, Math.PI / 2, k); gx = lerp(gw.x, piv.x, k); gy = lerp(gw.y, piv.y, k); sc = lerp(s * 1.15, s, k); }
+    else { const q = t - 1.3; th = Math.PI / 2 - Math.max(0, Math.sin(Math.min(q, .3) / .3 * Math.PI)) * .12; gx = piv.x; gy = piv.y; sc = s; if (q > .85) sc = s * (1 - ez((q - .85) / .45)); }
+    g.scale.setScalar(Math.max(.001, sc)); at(g, gx, gy, 0);
+    g.rotation.set(0, 0, 0); g.rotateZ(th * dir); if (!right) g.rotateY(Math.PI); g.rotateX(.18);
     const hot = t < 1.3 ? .6 + .4 * Math.sin(t * 30) : Math.max(0, 1 - (t - 1.3) * 1.5);
-    M.strip.color.setHSL(.14, 1, .55 + hot * .3); g.aura.material.opacity = hot * .9; g.aura.scale.setScalar(4 + hot * 4); }
+    g.aura.material.opacity = hot * .9; g.aura.scale.setScalar(4 + hot * 4);
+    I.hx = bx; I.hy = by; }
   else {   // VOLTAGE OVERLOAD: slides in pointing at the boss, charges up (neon glows, shakes), overload blast at 2.7   (end 3.6)
     const s = 42; g.scale.setScalar(s);
     let ux = bx - 70, uy = by - 600; const ul = Math.hypot(ux, uy); ux /= ul; uy /= ul;
@@ -366,8 +377,8 @@ function poseSkill(k, t, I) {
     at(g, lerp(gx - 260, gx, a) - o * 260 + (Math.random() - .5) * sh, lerp(gy + 380, gy, a) + o * 380 + (Math.random() - .5) * sh, 0);
     g.rotation.set(0, 0, 0); g.rotateZ(Math.atan2(ux, uy)); g.rotateY(.5 + t * .6);
     const over = t > 2.7 && t < 3.0;
-    M.neon.emissive.setHSL(lerp(0, .58, ch), 1, .5); M.neon.emissiveIntensity = over ? 6 : .5 + ch * 4 + Math.random() * ch;
-    g.neonGlow.material.color.setHSL(lerp(0, .58, ch), 1, .6); g.neonGlow.scale.setScalar(2 + ch * 4 + (over ? 6 : 0)); g.tip.scale.setScalar(1 + ch * 3 + (over ? 6 : 0));
+    const pul = .75 + .25 * Math.sin(t * (6 + ch * 30)); g.neonM.emissive.setHSL(lerp(.02, .09, ch), 1, .5 + ch * .25); g.neonM.emissiveIntensity = over ? 8 : (.4 + ch * 5) * pul + Math.random() * ch;
+    g.neonGlow.material.color.setHSL(lerp(.02, .1, ch), 1, .55 + ch * .2); g.neonGlow.material.opacity = Math.min(1, .25 + ch * .9) * pul; g.neonGlow.scale.setScalar(1.6 + ch * 5 * pul + (over ? 7 : 0)); g.tip.scale.setScalar(1 + ch * 3 + (over ? 6 : 0));
     I.tipX = tip.x + (a < 1 ? (a - 1) * 260 : 0); I.tipY = tip.y; }
 }
 function iconOf(k) {   // still picture of a skill prop for the skill button
@@ -392,7 +403,7 @@ window.RIG = renderer ? {
     ctx.drawImage(rigC, x - size / 2, y - size / 2, size, size); this.ms = this.ms * .95 + (performance.now() - t0) * .05; },
   blit(ctx, x, y, size) { if (rigC) ctx.drawImage(rigC, x - size / 2, y - size / 2, size, size); },
   pet(ctx, x, y, size, rk, tt) {
-    const g = PETS[rk] || PETS.timber; for (const k in PETS) PETS[k].visible = PETS[k] === g;
+    const g = PETS[rk] || PETS.timber; for (const k in PETS) PETS[k].visible = PETS[k] === g; for (const k in ATT) ATT[k].visible = false;
     g.rotation.set(0, Math.sin(tt * 3) * .3, Math.sin(tt * 1.7) * .25); g.position.z = Math.sin(tt * 6) * .1;
     if (g.bit) g.bit.rotation.y = tt * 40; if (g.wings) g.wings.forEach(w => w.rotation.y = Math.sin(tt * 40) * .5 * w.sx);
     if (g.glow) { g.glow.material.opacity = .5 + Math.random() * .5; g.glow.scale.setScalar((g === PETS.spark ? 1.4 : .8) + Math.random() * .5); }
@@ -405,6 +416,9 @@ window.RIG = renderer ? {
     if (sCv.width !== w) { r.setSize(w, h, false); }
     sCam.aspect = view.W / view.H; const z = (view.H / 2) / Math.tan(25 * Math.PI / 180); sCam.position.set(view.W / 2, -view.H / 2, z); sCam.lookAt(view.W / 2, -view.H / 2, 0); sCam.updateProjectionMatrix();
     poseSkill(k, t, I); r.render(sScene, sCam); ctx.drawImage(sCv, 0, 0, view.W, view.H); },
-  icon(k) { if (!ICONS[k]) ICONS[k] = iconOf(k); return ICONS[k]; }
+  icon(k) { if (!ICONS[k]) ICONS[k] = iconOf(k); return ICONS[k]; },
+  petIcon(rk) { return cachedIcon('pet' + rk, () => { soloPet(rk, 'pet'); const g = PETS[rk]; g.rotation.set(0, .3, .2); g.position.z = 0; shot(pScene, pCam, 128); }); },
+  attIcon(rk) { return cachedIcon('att' + rk, () => { soloPet(rk, 'att'); const g = ATT[rk]; g.rotation.set(.3, .5, -.35); g.scale.setScalar(.95); shot(pScene, pCam, 128); g.visible = false; }); },
+  rigIcon(rk) { return cachedIcon('rig' + rk, () => { update({ rig: rk, lv: 7, at: 2, still: 1, cine: .4, spin: -.5, dt: 0 }); shot(scene, cam, 128); }); }
 } : { ok: false };
 window.dispatchEvent(new Event('rigready'));
