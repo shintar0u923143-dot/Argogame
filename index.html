@@ -38,7 +38,7 @@ let SK=null,hs=0;
 let bd=0,boss=null,warnT=0,stT=0,prevT=0,glDone=0,adDone=0,bannerT=0,flash=0,flashC='60,255,106',toolDone=false,bgS=0,bgPrev=0,bgFade=0,boostDone=false,bombFx=0,shake=0,toastM='',toastT=0;
 try{hi=+localStorage.getItem('ap_hi')||0}catch(e){}
 /* ===== CAMPAIGN CONFIG: the scoreboard link now lives in config.js (so updating this file never erases it) ===== */
-const VER='v62';
+const VER='v63';
 const API_URL=(typeof window.API_URL==='string'?window.API_URL:'').trim();
 let pname='',did='',subMsg='',lbRows=[],lbMsg='',nmT=0,nmMsg='';
 try{pname=localStorage.getItem('ap_name')||'';did=localStorage.getItem('ap_did')||''}catch(e){}
@@ -212,6 +212,10 @@ let ZP=[];function zap(x1,y1,x2,y2,c,w,l){ZP.push({x1,y1,x2,y2,c:c||'150,210,255
 function chainZap(e0,dmg,n){let from=e0;const hit=[e0];for(let j=0;j<n;j++){let best=null,bd2=110*110;for(const e of E){if(e.dead||e.bur||hit.includes(e))continue;const d2=(e.x-from.x)**2+(e.y-from.y)**2;if(d2<bd2){bd2=d2;best=e}}
  if(!best)break;zap(from.x,from.y,best.x,best.y,'150,210,255',2.5,.14);hit.push(best);hitE(best,dmg);from=best}}
 function petTarget(p){let best=null,bd2=300*300;for(const e of E){if(e.dead||e.bur||e.inv||e.y<0)continue;const d2=(e.x-p.x)**2+(e.y-p.y)**2;if(d2<bd2){bd2=d2;best=e}}return best||(boss&&boss.in?boss:null)}
+/* no enemy in range: sidekicks keep firing straight ahead (same rate, small damage, so they never outshine the rig) */
+function petVolley(p){const y0=p.y-18;if(P.wp=='heat'){p.cd=.85;B.push({x:p.x,y:y0,vx:0,vy:-900,dmg:1.6,r:4,k:'a'})}
+ else if(P.wp=='disc'){p.cd=1.05;B.push({x:p.x,y:y0,vx:0,vy:-560,dmg:2,r:7,k:'d',bit:1,sm:1,h:new Map(),a:0,rt:0,life:3})}
+ else{p.cd=.75;B.push({x:p.x,y:y0,vx:0,vy:-760,dmg:1.1,r:4,k:'n',el:1})}}
 function petFire(p,t){const isB=t===boss,tx=t.x,ty=isB?t.y+t.hh*.4:t.y;
  if(P.wp=='heat'){p.cd=.85;zap(p.x,p.y-16,tx,ty,'200,236,255',3,.15);boom(tx,ty,'#bfe9ff',3);if(isB)bhit(2.5);else hitE(t,5)}
  else if(P.wp=='disc'){p.cd=1.05;const a=Math.atan2(ty-p.y,tx-p.x);B.push({x:p.x,y:p.y-14,vx:Math.cos(a)*520,vy:Math.sin(a)*520,dmg:2,r:7,k:'d',bit:1,sm:1,h:new Map(),a:0,rt:0,life:3})}
@@ -308,7 +312,8 @@ function rigItemIco(ty,x,y,z){const rk=rid(P.wp);if(rigOn()){const c=ty=='pet'?R
 const TYL={up:['POWER +1','#ffd21f'],pet:['SIDEKICK','#9fe4ff'],att:['ARSENAL','#ff9a5a']};
 function drawPets(){if(!P.pt||!P.pt.length)return;P.pt.forEach((p,i)=>{const z=62*p.in;if(z<2)return;
  if(rigOn()){if(i==0)RIG.pet(g,p.x,p.y,z,rid(P.wp),tm);else RIG.petBlit(g,p.x,p.y,z)}
- else{g.save();g.globalCompositeOperation='lighter';glow('eye',p.x,p.y,18,.7);g.restore();g.globalAlpha=1;em(RIGD[P.wp].e,p.x,p.y,18)}})}
+ else{g.save();g.globalCompositeOperation='lighter';glow('eye',p.x,p.y,18,.7);g.restore();g.globalAlpha=1;em(RIGD[P.wp].e,p.x,p.y,18)}
+ if(p.mf>0){g.save();g.globalCompositeOperation='lighter';glow(P.wp=='disc'?'fire':'eye',p.x,p.y-22,14,p.mf/.09);g.restore();g.globalAlpha=1}})}
 function drawSkill(){if(!SK)return;const s=SK,t=s.t,k=s.k,L=SKL[k],fin=k=='disc'?2.6:k=='heat'?4.3:3.6,fade=Math.max(0,Math.min(1,t*3,(fin-t)*3));
  g.fillStyle=`rgba(0,0,0,${.45*fade})`;g.fillRect(0,0,W,H);
  g.save();g.globalCompositeOperation='lighter';rays(W/2,H*.74,260,18,.12*fade);g.restore();g.globalAlpha=1;
@@ -490,7 +495,7 @@ function upd(dt){if(hs>0){hs-=dt;updFx(dt*.2);return}tm+=dt;stT+=dt;const d=dif(
   for(const ox of xs){const x0=P.x+ox,y0=P.y-24;if(P.wp=='heat')B.push({x:x0,y:y0,vx:0,vy:-900,dmg:1.6,r:4,k:'a'});else if(P.wp=='disc')B.push({x:x0,y:y0,vx:ox*2.2,vy:-560,dmg:1.6,r:7,k:'d',bit:1,sm:1,h:new Map(),a:0,rt:0,life:3});else B.push({x:x0,y:y0,vx:ox*1.5,vy:-760,dmg:1.1,r:4,k:'n',el:1})}}}
  /* sidekick drones: from the 5th rig power-up on */
  const np=P.pets;while(P.pt.length<np)P.pt.push({x:P.x,y:P.y+60,cd:.6+P.pt.length*.35,in:0});P.pt.length=np;
- P.pt.forEach((p,i)=>{const hx=P.x+(i?72:-72),hy=P.y+4+Math.sin(tm*3+i*2)*6;p.x+=(hx-p.x)*Math.min(1,dt*6);p.y+=(hy-p.y)*Math.min(1,dt*6);p.in=Math.min(1,p.in+dt*2);p.cd-=dt;if(p.cd<=0){const t=petTarget(p);if(t)petFire(p,t);else p.cd=.2}});
+ P.pt.forEach((p,i)=>{const hx=P.x+(i?72:-72),hy=P.y+4+Math.sin(tm*3+i*2)*6;p.x+=(hx-p.x)*Math.min(1,dt*6);p.y+=(hy-p.y)*Math.min(1,dt*6);p.in=Math.min(1,p.in+dt*2);p.mf=Math.max(0,(p.mf||0)-dt);p.cd-=dt;if(p.cd<=0&&!SK){const t=petTarget(p);if(t)petFire(p,t);else petVolley(p);p.mf=.09}});
  /* progression */
  if(!boss){
   if(warnT>0){warnT-=wd;if(warnT<=0)mkBoss()}
