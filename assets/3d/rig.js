@@ -63,12 +63,15 @@ function helix(r, len, turns, tube, mat, parent, pos, rot) {
   return part(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), turns * 24, tube, 6), mat, parent, pos, rot, false); }
 
 /* ---------- renderer (one fixed 512px canvas; each picture uses a corner viewport, so nothing is ever resized) ---------- */
-const CV = 512, cv = document.createElement('canvas'); cv.width = cv.height = CV;
-let renderer = null;
+const CV = 1024, cv = document.createElement('canvas'); cv.width = cv.height = CV;
+let renderer = null, lost = false;
 try { renderer = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true, premultipliedAlpha: false, preserveDrawingBuffer: true }); } catch (e) { renderer = null; }
 let envTex = null;
 if (renderer) { renderer.setPixelRatio(1); renderer.setSize(CV, CV, false); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
   envTex = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture; renderer.setScissorTest(true); }
+if (renderer) {   // GPU hiccup / context loss: the game falls back to its 2D art until the GPU is back, instead of freezing
+  cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); lost = true; }, false);
+  cv.addEventListener('webglcontextrestored', () => { lost = false; }, false); }
 function lights(scene) { scene.environment = envTex; const k = new THREE.DirectionalLight(0xffffff, 2.2); k.position.set(-3, -2, 8); scene.add(k); const r = new THREE.DirectionalLight(0xffd9a0, 1.4); r.position.set(4, 6, 3); scene.add(r); }
 function shot(scene, camera, px) { renderer.setViewport(0, 0, px, px); renderer.setScissor(0, 0, px, px); renderer.setClearColor(0, 0); renderer.clear(); renderer.render(scene, camera); }
 const copyOf = (px) => { const c = document.createElement('canvas'); c.width = c.height = px; c.getContext('2d').drawImage(cv, 0, CV - px, px, px, 0, 0, px, px); return c; };
@@ -281,13 +284,8 @@ function soloPet(rk, which) { for (const k in PETS) PETS[k].visible = which === 
 /* ======================================================================= */
 /*  SIGNATURE SKILLS (full screen, 3D)                                       */
 /* ======================================================================= */
-let sR = null, sCv = null; const sScene = new THREE.Scene(); lights(sScene);
+const sScene = new THREE.Scene(); lights(sScene);
 const sCam = new THREE.PerspectiveCamera(50, 360 / 640, 10, 3000);
-function skillRenderer() {
-  if (sR) return sR; sCv = document.createElement('canvas'); sCv.width = 360; sCv.height = 640;
-  sR = new THREE.WebGLRenderer({ canvas: sCv, alpha: true, antialias: true, premultipliedAlpha: false });
-  sR.setPixelRatio(1); sR.outputColorSpace = THREE.SRGBColorSpace; sR.toneMapping = THREE.ACESFilmicToneMapping; sR.toneMappingExposure = 1.2;
-  sScene.environment = new THREE.PMREMGenerator(sR).fromScene(new RoomEnvironment(), .04).texture; return sR; }
 const PROP = {};
 function textTex(lines, w, h, fg, bg, font) { return cvs(w, h, (x) => { if (bg) { x.fillStyle = bg; x.beginPath(); if (x.roundRect) x.roundRect(4, 4, w - 8, h - 8, h * .22); else x.rect(4, 4, w - 8, h - 8); x.fill(); }
   x.fillStyle = fg; x.textAlign = 'center'; x.textBaseline = 'middle'; lines.forEach((l, i) => { x.font = l[1] || font; x.fillText(l[0], w / 2, h * (i + .5) / lines.length + 2); }); }); }
@@ -390,15 +388,15 @@ const ICONS = {};
 
 let rigC = null;
 window.RIG = renderer ? {
-  ok: true, ms: 4,
-  draw(ctx, x, y, size, s, px) {
+  get ok() { return !lost; }, ms: 4,
+  draw(ctx, x, y, size, s, px) { if (lost) return;
     px = Math.max(128, Math.min(CV, Math.ceil((px || 256) / 32) * 32));
     const t0 = performance.now(); update(s || {}); shot(scene, cam, px);
     if (!rigC || rigC.width !== px) { rigC = document.createElement('canvas'); rigC.width = rigC.height = px; }
     const rc = rigC.getContext('2d'); rc.clearRect(0, 0, px, px); rc.drawImage(cv, 0, CV - px, px, px, 0, 0, px, px);
-    ctx.drawImage(rigC, x - size / 2, y - size / 2, size, size); this.ms = this.ms * .95 + (performance.now() - t0) * .05; },
+    ctx.drawImage(rigC, x - size / 2, y - size / 2, size, size); this.ms = this.ms * .95 + Math.min(40, performance.now() - t0) * .05; },
   blit(ctx, x, y, size) { if (rigC) ctx.drawImage(rigC, x - size / 2, y - size / 2, size, size); },
-  pet(ctx, x, y, size, rk, tt) {
+  pet(ctx, x, y, size, rk, tt) { if (lost) return;
     const g = PETS[rk] || PETS.timber; for (const k in PETS) PETS[k].visible = PETS[k] === g; for (const k in ATT) ATT[k].visible = false;
     g.rotation.set(0, Math.sin(tt * 3) * .3, Math.sin(tt * 1.7) * .25); g.position.z = Math.sin(tt * 6) * .1;
     if (g.bit) g.bit.rotation.y = tt * 40; if (g.wings) g.wings.forEach(w => w.rotation.y = Math.sin(tt * 40) * .5 * w.sx);
@@ -408,10 +406,19 @@ window.RIG = renderer ? {
     const pc = petC.getContext('2d'); pc.clearRect(0, 0, 128, 128); pc.drawImage(cv, 0, CV - 128, 128, 128, 0, 0, 128, 128); ctx.drawImage(petC, x - size / 2, y - size / 2, size, size); },
   petBlit(ctx, x, y, size) { if (petC) ctx.drawImage(petC, x - size / 2, y - size / 2, size, size); },
   skill(ctx, k, t, I, view) {
-    const r = skillRenderer(), w = Math.min(720, Math.round(view.W * view.res)), h = Math.round(w * view.H / view.W);
-    if (sCv.width !== w) { r.setSize(w, h, false); }
+    if (lost) return false;
+    const h = Math.min(CV, Math.round(view.H * Math.min(view.res, 1.6))), w = Math.round(h * view.W / view.H);
     sCam.aspect = view.W / view.H; const z = (view.H / 2) / Math.tan(25 * Math.PI / 180); sCam.position.set(view.W / 2, -view.H / 2, z); sCam.lookAt(view.W / 2, -view.H / 2, 0); sCam.updateProjectionMatrix();
-    poseSkill(k, t, I); r.render(sScene, sCam); ctx.drawImage(sCv, 0, 0, view.W, view.H); },
+    poseSkill(k, t, I); renderer.toneMappingExposure = 1.2;
+    renderer.setViewport(0, 0, w, h); renderer.setScissor(0, 0, w, h); renderer.setClearColor(0, 0); renderer.clear(); renderer.render(sScene, sCam); renderer.toneMappingExposure = 1.15;
+    ctx.drawImage(cv, 0, CV - h, w, h, 0, 0, view.W, view.H); return true; },
+  /* compile every shader once while the title screen is idle, so the first skill / sidekick / rig select never stutters */
+  warm() { if (lost) return; const all = [];
+    for (const sc of [scene, pScene, sScene]) sc.traverse(o => { all.push([o, o.visible]); o.visible = true; });
+    try { renderer.compile(scene, cam); renderer.compile(pScene, pCam); renderer.compile(sScene, sCam); } catch (e) {}
+    for (const [o, v] of all) o.visible = v;
+    for (const r of ['weld', 'timber', 'spark']) { this.rigIcon(r); this.petIcon(r); this.attIcon(r); } for (const k of ['grind', 'hammer', 'volt']) this.icon(k); },
+  get alive() { return !lost; },
   icon(k) { if (!ICONS[k]) ICONS[k] = iconOf(k); return ICONS[k]; },
   petIcon(rk) { return cachedIcon('pet' + rk, () => { soloPet(rk, 'pet'); const g = PETS[rk]; g.rotation.set(0, .3, .2); g.position.z = 0; shot(pScene, pCam, 128); }); },
   attIcon(rk) { return cachedIcon('att' + rk, () => { soloPet(rk, 'att'); const g = ATT[rk]; g.rotation.set(.3, .5, -.35); g.scale.setScalar(.95); shot(pScene, pCam, 128); g.visible = false; }); },
